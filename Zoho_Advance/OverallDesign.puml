@@ -1,0 +1,78 @@
+@startuml
+' Define entities
+entity User {
+    + user_id
+    + username
+    + password
+    + email
+    + role
+}
+
+entity Admin {
+    + admin_id
+    + other_admin_info
+}
+
+entity Manager {
+    + manager_id
+    + other_manager_info
+}
+
+entity Customer {
+    + customer_id
+    + other_customer_info
+    + wallet_balance
+}
+
+entity Product {
+    + product_id
+    + product_name
+    + description
+    + price
+    + quantity_available
+}
+
+entity Inventory {
+    + inventory_id
+    + quantity_available
+}
+
+entity Cart {
+    + cart_id
+    + quantity
+}
+
+entity Order {
+    + order_id
+    + order_date
+    + total_amount
+}
+
+entity OrderDetails {
+    + order_detail_id
+    + quantity
+    + price
+}
+
+entity PurchaseHistory {
+    + purchase_id
+    + purchase_date
+    + quantity
+    + total_amount
+}
+
+' Define relationships
+User ||--o{ Admin
+User ||--o{ Manager
+User ||--o{ Customer
+Manager }|--|| Inventory
+Customer }|--|| Cart
+Customer }|--|| Order
+Order }|--|| OrderDetails
+Customer }|--|| PurchaseHistory
+Product }|--|| Inventory
+Product }|--|| Cart
+Product }|--|| OrderDetails
+Product }|--|| PurchaseHistory
+
+@enduml
