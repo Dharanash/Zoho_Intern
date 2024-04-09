@@ -82,14 +82,17 @@ public final class CustomString {
     }
     
     public CustomString replace(char oldChar, char newChar){
-        char[] ostring = characters;
-        for(int i=0; i<ostring.length; i++){
-            if(ostring[i]==oldChar){
-                ostring[i]=newChar;
+        char[] nstring = new char[characters.length];
+        for(int i=0; i<nstring.length; i++){
+            if(characters[i]==oldChar){
+                nstring[i]=newChar;
+            }
+            else{
+                nstring[i]=characters[i];
             }
         }
 
-        return new CustomString(ostring);
+        return new CustomString(nstring);
     }
 
     public CustomString[] split(char delimiter){
