@@ -1,45 +1,61 @@
 package String_Practice;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CustomString {
-    public char[] toCharArray(String st){
-        char[] ch = new char[st.length()];
-        for(int i = 0; i < st.length(); i++){
-            ch[i] = st.charAt(i);
+    private char[] characters;
+
+    public CustomString(char[] chars) {
+        characters = chars;
+    }
+
+    public int length() {
+        return characters.length;
+    }
+
+    public char charAt(int index) {
+        if (index < 0 || index >= characters.length) {
+            throw new IndexOutOfBoundsException("Index out of bounds");
+        }
+        return characters[index];
+    }
+
+    public char[] toCharArray(){
+        char[] ch = new char[characters.length];
+        for(int i = 0; i < ch.length; i++){
+            ch[i] = characters[i];
         }
         return ch;
     }
 
-    public String toString(char[] ch){
-        String st="";
-        for(char c: ch){
-            st+=c;
-        }
-
-        return st;
+    public CustomString toCustomString(char[] ch){
+        CustomString cs=new CustomString(ch);
+        return cs;
     }
     
-    public String substring(String st, int beginIndex){
-        char[] ostring = toCharArray(st);
+    public CustomString substring(int beginIndex){
+        char[] ostring = characters;
         char[] nstring = new char[ostring.length-beginIndex];
         int j=beginIndex;
         for(int i=0; i<nstring.length; i++){
             nstring[i]=ostring[j++];
         }
-        return toString(nstring);
+        return toCustomString(nstring);
     }
 
-    public String substring(String st, int beginIndex, int endIndex){
-        char[] ostring = toCharArray(st);
+    public CustomString substring(int beginIndex, int endIndex){
+        char[] ostring = characters;
         char[] nstring = new char[endIndex-beginIndex];
         int j=beginIndex;
         for(int i=0; i<nstring.length; i++){
             nstring[i]=ostring[j++];
         }
-        return new String(nstring);
+        return new CustomString(nstring);
     }
 
-    public int indexOf(String st, char c){
-        char[] ostring = toCharArray(st);
+    public int indexOf(char c){
+        char[] ostring = characters;
         for(int i=0; i<ostring.length; i++){
             if(ostring[i]==c){
                 return i;
@@ -49,8 +65,8 @@ public class CustomString {
         return -1;
     }
 
-    public int indexOf(String st, char c, int fromIndex){
-        char[] ostring = toCharArray(st);
+    public int indexOf( char c, int fromIndex){
+        char[] ostring = characters;
         for(int i=fromIndex; i<ostring.length; i++){
             if(ostring[i]==c){
                 return i;
@@ -60,57 +76,45 @@ public class CustomString {
         return -1;
     }
 
-    public String replace(String st, char oldChar, char newChar){
-        char[] ostring = toCharArray(st);
+    @Override
+    public String toString() {
+        return new String(characters);
+    }
+    
+    public CustomString replace(char oldChar, char newChar){
+        char[] ostring = characters;
         for(int i=0; i<ostring.length; i++){
             if(ostring[i]==oldChar){
                 ostring[i]=newChar;
             }
         }
 
-        return new String(ostring);
+        return new CustomString(ostring);
     }
 
-    public String[] split(String st, char delimiter){
-        char[] ch = toCharArray(st);
-        int count=1;
-        for (int i = 0; i < ch.length; i++) {
-            if (ch[i] == delimiter) {
-                count++;
+    public CustomString[] split(char delimiter){
+        List<CustomString> parts = new ArrayList<>();
+        int startIndex = 0;
+        for (int i = 0; i < characters.length; i++) {
+            if (characters[i] == delimiter) {
+                parts.add(substring(startIndex, i));
+                startIndex = i + 1;
             }
         }
-
-        String[] nstring=new String[count];
-        String substring="";
-        int j=0;
-        for(int i=0; i<ch.length; i++){
-            if (ch[i] == delimiter) {
-                nstring[j++]=substring;
-                substring="";
-            }
-            else{
-                substring+=ch[i];
-            }
-            
+        if (startIndex < characters.length) {
+            parts.add(substring(startIndex, characters.length));
         }
-
-        if(substring!=""&&j<nstring.length){
-            nstring[j]=substring;
-        }
-
-        return nstring;
+        return parts.toArray(new CustomString[parts.size()]);
     }
 
-    public String trim(String st){
-        String nstring ="";
-        char[] ostring = toCharArray(st);
-        int start=0, end=ostring.length-1;
+    public CustomString trim(){
+        int start=0, end=characters.length-1;
 
         while(start<end){
-            if(ostring[start]==' '){
+            if(characters[start]==' '){
                 start++;
             }
-            else if(ostring[end]==' '){
+            else if(characters[end]==' '){
                 end--;
             }
             else{
@@ -118,19 +122,20 @@ public class CustomString {
             }
         }
 
-        for(int i=start; i<=end; i++){
-            nstring+=ostring[i];
+        char[] ch=new char[end-start+1];
+        for(int i=0; i<ch.length; i++){
+            ch[i]=characters[start++];
         }
 
-        return nstring;
+        return new CustomString(ch);
     }
 
-    public String toUpperCase(String st) {
-        char[] ch = toCharArray(st);
+    public CustomString toUpperCase() {
+        char[] ch = new char[characters.length];
         for (int i = 0; i < ch.length; i++) {
-            ch[i] = toUpperCase(st.charAt(i));
+            ch[i] = toUpperCase(characters[i]);
         }
-        return new String(ch);
+        return new CustomString(ch);
     }
 
     public char toUpperCase(char c) {
@@ -140,12 +145,12 @@ public class CustomString {
         return c;
     }
 
-    public String toLowerCase(String st) {
-        char[] ch = toCharArray(st);
+    public CustomString toLowerCase() {
+        char[] ch = new char[characters.length];
         for (int i = 0; i < ch.length; i++) {
-            ch[i] = toUpperCase(st.charAt(i));
+            ch[i] = toUpperCase(characters[i]);
         }
-        return new String(ch);
+        return new CustomString(ch);
     }
 
     public char toLowerCase(char c) {
@@ -155,15 +160,30 @@ public class CustomString {
         return c;
     }
 
-    public boolean contains(String str, char c){
-        char[] ch = toCharArray(str);
-        for(char x: ch){
+    public boolean contains(char c){
+
+        for(char x: characters){
             if(x==c){
                 return true;
             }
         }
 
         return false;
+    }
+
+    public CustomString concat(CustomString str) {
+        int thisLength = length();
+        int otherLength = str.length();
+        char[] result = new char[thisLength+otherLength];
+        int i=0;
+        for(i=0; i<thisLength;i++){
+            result[i]=characters[i];
+        }
+        for(int j=0;j<otherLength;j++){
+            result[i]=str.charAt(j);
+        }
+
+        return new CustomString(result);
     }
 
 

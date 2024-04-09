@@ -27,16 +27,15 @@ public class Main {
         Scanner sc = new Scanner(System.in);
 
         System.out.print("Enter a string : ");
-        String s = sc.nextLine();
+        char[] inputChars = sc.nextLine().toCharArray();
+        CustomString cs = new CustomString(inputChars);
         char c='e';
-        CustomString cs= new CustomString();
-        System.out.println(cs.contains(s, c));
-        System.out.println(cs.indexOf(s, c));
-        System.out.println(cs.indexOf(s, c, 5));
-        System.out.println(cs.substring(s, 6));
-        System.out.println(cs.substring(s, 4,7));
-        System.out.println(cs.trim(s));
-        for(String str: cs.split(s, c)){
+        System.out.println(cs.indexOf(c));
+        System.out.println(cs.indexOf(c, 5));
+        System.out.println(cs.substring( 6));
+        System.out.println(cs.substring(4,7));
+        System.out.println(cs.trim());
+        for(CustomString str: cs.split(c)){
             System.out.print(str+"-");
         }
 
