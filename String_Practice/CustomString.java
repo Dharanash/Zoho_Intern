@@ -3,8 +3,8 @@ package String_Practice;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomString {
-    private char[] characters;
+public final class CustomString {
+    private final char[] characters;
 
     public CustomString(char[] chars) {
         characters = chars;
