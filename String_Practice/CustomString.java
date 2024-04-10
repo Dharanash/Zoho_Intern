@@ -15,9 +15,6 @@ public final class CustomString {
     }
 
     public char charAt(int index) {
-        if (index < 0 || index >= characters.length) {
-            throw new IndexOutOfBoundsException("Index out of bounds");
-        }
         return characters[index];
     }
 
@@ -35,40 +32,30 @@ public final class CustomString {
     }
     
     public CustomString substring(int beginIndex){
-        char[] ostring = characters;
-        char[] nstring = new char[ostring.length-beginIndex];
+        char[] nstring = new char[characters.length-beginIndex];
         int j=beginIndex;
         for(int i=0; i<nstring.length; i++){
-            nstring[i]=ostring[j++];
+            nstring[i]=characters[j++];
         }
         return toCustomString(nstring);
     }
 
     public CustomString substring(int beginIndex, int endIndex){
-        char[] ostring = characters;
         char[] nstring = new char[endIndex-beginIndex];
         int j=beginIndex;
         for(int i=0; i<nstring.length; i++){
-            nstring[i]=ostring[j++];
+            nstring[i]=characters[j++];
         }
         return new CustomString(nstring);
     }
 
     public int indexOf(char c){
-        char[] ostring = characters;
-        for(int i=0; i<ostring.length; i++){
-            if(ostring[i]==c){
-                return i;
-            }
-        }
-
-        return -1;
+        return index(c, 0);
     }
 
     public int indexOf( char c, int fromIndex){
-        char[] ostring = characters;
-        for(int i=fromIndex; i<ostring.length; i++){
-            if(ostring[i]==c){
+        for(int i=fromIndex; i<characters.length; i++){
+            if(characters[i]==c){
                 return i;
             }
         }
@@ -191,3 +178,4 @@ public final class CustomString {
 
 
 }
+
