@@ -11,6 +11,8 @@ import online_shopping_system.POJO.Product;
 import online_shopping_system.POJO.User;
 import online_shopping_system.POJO.Wallet;
 import online_shopping_system.enums.OrderStatus;
+import online_shopping_system.enums.ProductStatus;
+import online_shopping_system.enums.Role;
 import online_shopping_system.services.EncryptionService;
 import online_shopping_system.services.MappingService;
 
@@ -81,11 +83,12 @@ public class DbConnectionDao {
 		return st.executeQuery();
 	}
 
-	public ResultSet getCustomerDetailsFromId(int cid) throws SQLException, ClassNotFoundException {
-		String sql = "SELECT * FROM customer_details WHERE customer_detailsid = ?";
+	public ResultSet getCustomerDetailsFromId(int cId, int userId) throws SQLException, ClassNotFoundException {
+		String sql = "SELECT * FROM customer_details WHERE customer_detailsid =? and userid=?";
 		Connection conn = getConnection();
 		PreparedStatement st = conn.prepareStatement(sql);
-		st.setInt(1, cid);
+		st.setInt(1, cId);
+		st.setInt(2, userId);
 		return st.executeQuery();
 	}
 
@@ -125,8 +128,8 @@ public class DbConnectionDao {
 	}
 
 	public void addProduct(Product product) throws ClassNotFoundException, SQLException {
-		String sql = "INSERT INTO inventory (productname, description, price, quantity, createdBy, modifiedBy, createdTime, modifiedTime) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO inventory (productname, description, price, quantity, createdBy, modifiedBy, createdTime, modifiedTime, productstatus) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setString(1, product.name);
 			statement.setString(2, product.description);
@@ -136,13 +139,13 @@ public class DbConnectionDao {
 			statement.setInt(6, product.modifiedBy);
 			statement.setTimestamp(7, product.createdTime);
 			statement.setTimestamp(8, product.modifiedTime);
-
+			statement.setString(9, product.productStatus.toString());
 			statement.executeUpdate();
 		}
 	}
 
 	public boolean isProductExistInInventory(int productId) throws ClassNotFoundException, SQLException {
-		String query = "SELECT * FROM inventory WHERE productid = ?";
+		String query = "SELECT * FROM inventory WHERE productid = ? and productstatus='Available'";
 		try (Connection connection = getConnection(); PreparedStatement st = connection.prepareStatement(query)) {
 
 			st.setInt(1, productId);
@@ -157,7 +160,7 @@ public class DbConnectionDao {
 	public void updateProduct(int productId, Product updatedProduct) throws ClassNotFoundException, SQLException {
 		try (Connection conn = getConnection();
 				PreparedStatement statement = conn.prepareStatement("UPDATE inventory "
-						+ "SET productname = ?, description = ?, price = ?, quantity = ?, modifiedBy = ?, modifiedTime = ? "
+						+ "SET productname = ?, description = ?, price = ?, quantity = ?, modifiedBy = ?, modifiedTime = ?"
 						+ "WHERE productid = ?")) {
 			statement.setString(1, updatedProduct.name);
 			statement.setString(2, updatedProduct.description);
@@ -172,42 +175,53 @@ public class DbConnectionDao {
 		}
 	}
 
-	public void removeProductInInventory(int productId) throws ClassNotFoundException, SQLException {
-		String query = "DELETE FROM inventory WHERE productid = ?";
+	public void removeProductInInventory(int productId, int userId) throws ClassNotFoundException, SQLException {
+		String query = "UPDATE inventory SET productstatus=?, modifiedby=?, modifiedtime=? WHERE productid = ?";
 		try (Connection conn = getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
-			statement.setInt(1, productId);
+			statement.setString(1, ProductStatus.NotAvailable.toString());
+			statement.setInt(2, userId);
+			statement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+			statement.setInt(4, productId);
 
 			statement.executeUpdate();
 		}
 	}
 
-	public ResultSet getInventory(int roleId) throws ClassNotFoundException, SQLException {
+	public ResultSet getInventory(int userId, int roleId) throws ClassNotFoundException, SQLException {
 		String query = "";
-		if (roleId == 3) {
-			query = "SELECT productid, productname, description, price, quantity FROM inventory";
+		if (roleId == Role.Customer.getRoleId()) {
+			query = "SELECT productid, productname, description, price, quantity FROM inventory where productstatus='Available'";
+		} else if (roleId == Role.Manager.getRoleId()) {
+			query = "SELECT i.*, u1.name AS createdByName,u2.name AS modifiedByName FROM inventory i "
+					+ "LEFT JOIN users u1 ON i.createdby = u1.userid "
+					+ "LEFT JOIN users u2 ON i.modifiedby = u2.userid "
+					+ "WHERE i.createdby = ? AND i.productstatus = 'Available'";
 		} else {
-			query = "SELECT * FROM inventory";
+			query = "SELECT i.*," + "u1.name AS createdByName,u2.name AS modifiedByName " + "FROM inventory i "
+					+ "LEFT JOIN users u1 ON i.createdby = u1.userid "
+					+ "LEFT JOIN users u2 ON i.modifiedby = u2.userid ";
 		}
 
 		Connection conn = getConnection();
 		PreparedStatement statement = conn.prepareStatement(query);
+		if (roleId == Role.Manager.getRoleId()) {
+			statement.setInt(1, userId);
+		}
 		return statement.executeQuery();
 	}
 
-	public String getUserName(int userId) throws ClassNotFoundException {
+	public String getUserName(int userId) throws ClassNotFoundException, SQLException {
 		String query = "SELECT name FROM users WHERE userid = ?";
 		String username = "No Longer availble";
 
 		try (Connection connection = getConnection();
-			PreparedStatement statement = connection.prepareStatement(query)) {
+				PreparedStatement statement = connection.prepareStatement(query)) {
 			statement.setInt(1, userId);
 
 			ResultSet resultSet = statement.executeQuery();
 			if (resultSet.next()) {
 				username = resultSet.getString("name");
 			}
-		} catch (SQLException e) {
-			System.err.println("Error getting username: " + e.getMessage());
 		}
 
 		return username;
@@ -249,7 +263,7 @@ public class DbConnectionDao {
 	}
 
 	public ResultSet getCartElements(int userId) throws ClassNotFoundException, SQLException {
-		String query = "SELECT * FROM cart WHERE userid=?";
+		String query = "SELECT c.*, i.productname, i.quantity as productquantity, i.productstatus, i.price FROM cart as c left join inventory as i on i.productid=c.productid WHERE userid=?";
 		Connection conn = getConnection();
 		PreparedStatement st = conn.prepareStatement(query);
 		st.setInt(1, userId);
@@ -264,7 +278,7 @@ public class DbConnectionDao {
 		return st.executeQuery();
 	}
 
-	public void updateProductQuantityInCart(int productId, int userId, int nquantity) throws ClassNotFoundException {
+	public void updateProductQuantityInCart(int productId, int userId, int nquantity) throws ClassNotFoundException, SQLException {
 		try (Connection conn = getConnection();
 				PreparedStatement st = conn
 						.prepareStatement("UPDATE cart SET quantity = ? WHERE userid = ? AND productid = ?")) {
@@ -272,15 +286,13 @@ public class DbConnectionDao {
 			st.setInt(2, userId);
 			st.setInt(3, productId);
 			st.executeUpdate();
-		} catch (SQLException e) {
-			System.err.println("Error updating cart quantity: " + e.getMessage());
 		}
 	}
 
-	public Wallet getWalletFromId(int userId) throws ClassNotFoundException {
+	public Wallet getWalletFromId(int userId) throws ClassNotFoundException, SQLException {
 		Wallet wallet = null;
 		try (Connection conn = getConnection();
-			PreparedStatement st = conn.prepareStatement("Select * from wallet WHERE userid = ?")) {
+				PreparedStatement st = conn.prepareStatement("Select * from wallet WHERE userid = ?")) {
 			st.setInt(1, userId);
 			ResultSet rs = st.executeQuery();
 			if (!rs.next()) {
@@ -288,8 +300,6 @@ public class DbConnectionDao {
 			}
 
 			wallet = MappingService.mapToWallet(rs);
-		} catch (SQLException e) {
-			System.err.println("Error updating cart quantity: " + e.getMessage());
 		}
 		return wallet;
 	}
@@ -316,49 +326,27 @@ public class DbConnectionDao {
 		return wallet;
 	}
 
-	public int addOrder(int userId, int customerDetailsId) throws ClassNotFoundException {
-		int orderId = -1;
-		try (Connection conn = getConnection();
-				PreparedStatement st = conn.prepareStatement(
-						"INSERT INTO orders (userid, status, addtime, customer_detailsid) VALUES (?, ?, ?, ?)",
-						PreparedStatement.RETURN_GENERATED_KEYS)) {
-			st.setInt(1, userId);
-			st.setString(2, OrderStatus.Placed.toString());
-			st.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-			st.setInt(4, customerDetailsId);
-			st.executeUpdate();
-			try (ResultSet gK = st.getGeneratedKeys()) {
-				if (gK.next()) {
-					orderId = gK.getInt(1);
-				}
-			}
-		} catch (SQLException e) {
-			System.err.println("Error placing order : " + e.getMessage());
-		}
-		return orderId;
-	}
-
-	public void fillOrderDetailsFromCart(int orderId, int userId) throws SQLException, ClassNotFoundException {
+	public void addOrder(int userId, int customerDetailsId) throws SQLException, ClassNotFoundException {
 		ResultSet cartElements = getCartElements(userId);
 
-		String insertQuery = "INSERT INTO order_details (orderid, productid, quantity, productprice) VALUES (?, ?, ?, ?)";
+		String insertQuery = "INSERT INTO orders (productid, orderstatus, addtime, customer_detailsid, quantity, price, userid) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		try (Connection connection = getConnection();
 				PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
 
 			while (cartElements.next()) {
-				int productId = cartElements.getInt("productid");
-				int uquantity = cartElements.getInt("quantity");
-				double productPrice = 0;
-				try (ResultSet productSt = getProductFromId(productId)) {
-					if (productSt.next()) {
-						productPrice = productSt.getDouble("price");
-					}
+				if (cartElements.getString("productstatus").equals(ProductStatus.Available.toString())) {
+					int productId = cartElements.getInt("productid");
+					int uquantity = cartElements.getInt("quantity");
+					double productPrice = cartElements.getDouble("price");
+					insertStatement.setInt(1, productId);
+					insertStatement.setString(2, OrderStatus.Placed.toString());
+					insertStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+					insertStatement.setDouble(4, customerDetailsId);
+					insertStatement.setInt(5, uquantity);
+					insertStatement.setDouble(6, productPrice);
+					insertStatement.setDouble(7, userId);
+					insertStatement.executeUpdate();
 				}
-				insertStatement.setInt(1, orderId);
-				insertStatement.setInt(2, productId);
-				insertStatement.setInt(3, uquantity);
-				insertStatement.setDouble(4, productPrice);
-				insertStatement.executeUpdate();
 			}
 		}
 	}
@@ -371,13 +359,11 @@ public class DbConnectionDao {
 				PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
 
 			while (cartElements.next()) {
-				int productId = cartElements.getInt("productid");
-				int uquantity = cartElements.getInt("quantity");
-				ResultSet productResult = getProductFromId(productId);
-				int updatedQuantity = 0;
-				if (productResult.next()) {
-					int actualQunatity = productResult.getInt("quantity");
-					updatedQuantity = actualQunatity - uquantity;
+				if (cartElements.getString("productstatus").equals(ProductStatus.Available.toString())) {
+					int productId = cartElements.getInt("productid");
+					int uquantity = cartElements.getInt("quantity");
+					int actualQunatity = cartElements.getInt("productquantity");
+					int updatedQuantity = actualQunatity - uquantity;
 					updateStatement.setInt(1, updatedQuantity);
 					updateStatement.setInt(2, productId);
 					updateStatement.executeUpdate();
@@ -388,26 +374,20 @@ public class DbConnectionDao {
 	}
 
 	public double releaseProductsToInventory(int orderId) throws ClassNotFoundException, SQLException {
-		ResultSet orderElements = getOrderDetails(orderId);
-		String updateQuery = "UPDATE inventory SET quantity = ? WHERE productid = ?";
+		ResultSet orderElements = getOrderFromId(orderId);
+		String updateQuery = "UPDATE inventory SET quantity = quantity+? WHERE productid = ?";
 		try (Connection connection = getConnection();
 				PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
 
 			double totalAmount = 0;
-			while (orderElements.next()) {
+			if (orderElements.next()) {
 				int productId = orderElements.getInt("productid");
 				int uquantity = orderElements.getInt("quantity");
-				double price = orderElements.getDouble("productprice");
-				ResultSet productResult = getProductFromId(productId);
-				int updatedQuantity = 0;
-				if (productResult.next()) {
-					int actualQunatity = productResult.getInt("quantity");
-					updatedQuantity = actualQunatity + uquantity;
-					updateStatement.setInt(1, updatedQuantity);
-					updateStatement.setInt(2, productId);
-					updateStatement.executeUpdate();
-				}
-				totalAmount += uquantity * price;
+				double price = orderElements.getDouble("price");
+				updateStatement.setInt(1, uquantity);
+				updateStatement.setInt(2, productId);
+				updateStatement.executeUpdate();
+				totalAmount = uquantity * price;
 			}
 			orderElements.close();
 			return totalAmount;
@@ -426,34 +406,40 @@ public class DbConnectionDao {
 			st.executeUpdate();
 		}
 	}
+	
+	public ResultSet getUserOrders(int userId) throws ClassNotFoundException, SQLException {
+		String query = "SELECT " + "o.*,c.address,c.pincode,i.productname " + "FROM orders o "
+				+ "JOIN customer_details c ON o.customer_detailsid = c.customer_detailsid "
+				+ "JOIN inventory i ON o.productid = i.productid where o.userid =?";
+		return getOrders(userId, query);
+	}
+	
+	public ResultSet getOrdersForDispatch(int userId ) throws ClassNotFoundException, SQLException {
+		String query = "SELECT o.*,c.address,c.pincode,i.productname,u.name FROM orders o "
+				+ "JOIN customer_details c ON o.customer_detailsid = c.customer_detailsid "
+				+ "JOIN inventory i ON o.productid = i.productid"
+				+ "JOIN users u ON o.userid = u.userid"
+				+ " where i.createdby =?";
+		return getOrders(userId, query);
+	}
 
-	public ResultSet getOrders(int userId) throws ClassNotFoundException, SQLException {
-		String query = "SELECT * FROM orders WHERE userid = ?";
+	public ResultSet getOrders(int Id, String query) throws ClassNotFoundException, SQLException {
 		ResultSet resultSet = null;
 
 		Connection connection = getConnection();
 		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setInt(1, userId);
+		statement.setInt(1, Id);
 		resultSet = statement.executeQuery();
 
 		return resultSet;
 	}
 
 	public ResultSet getAllOrders() throws SQLException, ClassNotFoundException {
-		String query = "SELECT * FROM orders";
+		String query = "SELECT " + "o.*,c.address,c.pincode,i.productname " + "FROM orders o "
+				+ "JOIN customer_details c ON o.customer_detailsid = c.customer_detailsid "
+				+ "JOIN inventory i ON o.productid = i.productid ";
 		Connection connection = getConnection();
 		PreparedStatement statement = connection.prepareStatement(query);
-		ResultSet resultSet = statement.executeQuery();
-
-		return resultSet;
-	}
-
-	public ResultSet getOrderDetails(int orderId) throws SQLException, ClassNotFoundException {
-		String query = "SELECT * FROM order_details WHERE orderid = ?";
-
-		Connection connection = getConnection();
-		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setInt(1, orderId);
 		ResultSet resultSet = statement.executeQuery();
 
 		return resultSet;
@@ -484,7 +470,7 @@ public class DbConnectionDao {
 	}
 
 	public void updateOrderStatus(int orderId, OrderStatus orderStatus) throws SQLException, ClassNotFoundException {
-		String updateQuery = "UPDATE orders SET status = ? WHERE orderid = ?";
+		String updateQuery = "UPDATE orders SET orderstatus = ? WHERE orderid = ?";
 		try (Connection connection = getConnection();
 				PreparedStatement statement = connection.prepareStatement(updateQuery)) {
 			statement.setString(1, orderStatus.toString());

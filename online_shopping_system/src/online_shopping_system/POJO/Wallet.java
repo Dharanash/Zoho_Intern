@@ -22,4 +22,8 @@ public class Wallet {
     public void addToWalletBalance(double amount) {
     	this.balance+=amount;
     }
+    
+    public void addToWalletBalance(int points) {
+    	this.point+=points;
+    }
 }

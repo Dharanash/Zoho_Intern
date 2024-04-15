@@ -2,8 +2,11 @@ package online_shopping_system.services;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
+import online_shopping_system.Exceptions.UserNotifyException;
 import online_shopping_system.POJO.Wallet;
+import online_shopping_system.enums.ProductStatus;
 
 public class CustomerService extends UserService {
 	
@@ -14,19 +17,19 @@ public class CustomerService extends UserService {
 		System.out.println("Personal details added successfully.\n");
 	}
 	
-	public void updateCustomerDetails() throws ClassNotFoundException, SQLException {
+	public void updateCustomerDetails() throws ClassNotFoundException, SQLException, UserNotifyException {
 		int cdId = InputValidationService.getIntegerInput("Enter your address id : ");
 		String address = InputValidationService.getStringInput("Enter your address : ");
 		int pincode = InputValidationService.getIntegerInput("Enter your pincode : ");
 		if(dbconnDao.updateCustomerDetails(address, pincode, cdId)==0) {
-			System.out.println("Given personal details id doesn't exist.\n");
-			return;
+			throw new UserNotifyException("Given personal details id doesn't exist.\n");
 		}
 		System.out.println("Personal details updated successfully.\n");
 	}
 	
 	public void viewCustomerDetails(int userId) throws ClassNotFoundException, SQLException {
 		ResultSet resultSet = dbconnDao.getCustomerDetails(userId);
+		System.out.println("\nDetails id Address\t Pincode");
 		while(resultSet.next()) {
 			int cdId = resultSet.getInt("customer_detailsid");
 			String address = resultSet.getString("address");
@@ -36,11 +39,10 @@ public class CustomerService extends UserService {
 		resultSet.close();
 	}
 
-	public void updateCart(int userId) throws ClassNotFoundException, SQLException {
+	public void updateCart(int userId) throws ClassNotFoundException, SQLException, UserNotifyException {
 		int pid = InputValidationService.getIntegerInput("Enter the product id : ");
 		if (!dbconnDao.isProductExistInInventory(pid) || !dbconnDao.isProductExistInCart(pid, userId)) {
-			System.out.println("Given product does not exist.\n");
-			return;
+			throw new UserNotifyException("Given product does not exist.\n");
 		}
 
 		int quantity = InputValidationService.getIntegerInput("Enter the product quantity : ");
@@ -48,14 +50,12 @@ public class CustomerService extends UserService {
 		System.out.println("Product in cart updated successfully");
 	}
 
-	public void addToCart(int userId) throws ClassNotFoundException, SQLException {
+	public void addToCart(int userId) throws ClassNotFoundException, SQLException, UserNotifyException {
 		int pid = InputValidationService.getIntegerInput("Enter product id : ");
 		if (!dbconnDao.isProductExistInInventory(pid)) {
-			System.out.println("Given product does not exist.\n");
-			return;
+			throw new UserNotifyException("Given product does not exist.\n");
 		} else if (dbconnDao.isProductExistInCart(pid, userId)) {
-			System.out.println("Given product already exist in cart.\n");
-			return;
+			throw new UserNotifyException("Given product already exist in cart.\n");
 		}
 
 		int quantity = InputValidationService.getIntegerInput("Enter the quantity : ");
@@ -65,11 +65,10 @@ public class CustomerService extends UserService {
 
 	}
 
-	public void removeFromCart(int userId) throws ClassNotFoundException, SQLException {
+	public void removeFromCart(int userId) throws ClassNotFoundException, SQLException, UserNotifyException {
 		int productid = InputValidationService.getIntegerInput("Enter the product id : ");
 		if (!dbconnDao.isProductExistInCart(productid, userId)) {
-			System.out.println("Given product does not exist in cart.\n");
-			return;
+			throw new UserNotifyException("Given product does not exist in cart.\n");
 		}
 
 		dbconnDao.removeProductInCart(productid, userId);
@@ -79,56 +78,48 @@ public class CustomerService extends UserService {
 	public double viewCart(int userId) throws SQLException, ClassNotFoundException {
 		System.out.println(" Customer Cart List\n");
 		double totalAmount = 0;
+		System.out.println("Cart id Product Name\t Price\t Quantity\t Product Status");
 		try(ResultSet resultSet = dbconnDao.getCartElements(userId)){
 		
 		while (resultSet.next()) {
 			int pid = resultSet.getInt("productid");
-			try(ResultSet productResult = dbconnDao.getProductFromId(pid)){
-			if (!productResult.next()) {
-				System.out.println(pid + "\t No Longer Available");
-				continue;
-			}
 
-			String productName = productResult.getString("productname");
-			double price = productResult.getDouble("price");
+			String productName = resultSet.getString("productname");
+			double price = resultSet.getDouble("price");
 			int quantity = resultSet.getInt("quantity");
+			String productStatus= resultSet.getString("productstatus");
 			totalAmount += price * quantity;
-			System.out.println(pid + "\t" + productName + "\t" + price + "\t" + quantity);
+			System.out.println(pid + "\t" + productName + "\t" + price + "\t" + quantity +"\t"+productStatus);
 			}
-		}}
+		}
 
 		System.out.println(" Total amount : " + totalAmount + "\n");
 		return totalAmount;
 	}
 
-	public void purchase(int userid) throws SQLException, ClassNotFoundException {
-		double totalAmount = viewCart(userid);
+	public void purchase(int userId) throws SQLException, ClassNotFoundException, UserNotifyException {
+		double totalAmount = viewCart(userId);
 		if (!InputValidationService.getYesOrNoInput("Do you want to continue (yes or no) : ",
 				"Kindly enter from available options !\n")) {
 			return;
 		}
 
-		Wallet wallet = dbconnDao.getWalletFromId(userid);
+		Wallet wallet = dbconnDao.getWalletFromId(userId);
 		if (wallet.balance - totalAmount < 0) {
-			System.out.println("You do not have sufficient amount to make this purchase!\n");
-			return;
+			throw new UserNotifyException("You do not have sufficient amount to make this purchase!\n");
 		}
 
-		if (!checkValidPurchase(userid)) {
-			System.out.println("Some products quantity is not available in stock, so check and update your cart accordingly.\n");
-			return;
+		if (!checkValidPurchase(userId)) {
+			throw new UserNotifyException("Some products quantity is not available in stock, so check and update your cart accordingly.\n");
 		}
-		int cid = getCustomerDetailsId(userid);
-		ResultSet customerDetailsSet = dbconnDao.getCustomerDetailsFromId(cid);
+		int cid = getCustomerDetailsId(userId);
+		ResultSet customerDetailsSet = dbconnDao.getCustomerDetailsFromId(cid, userId);
 		if(!customerDetailsSet.next()) {
-			System.out.println("Given details id doesn't exist.\n");
-			return;
+			throw new UserNotifyException("Given details id doesn't exist.\n");
 		}
-		int orderId = dbconnDao.addOrder(userid, cid);
-		dbconnDao.fillOrderDetailsFromCart(orderId, userid);
-		dbconnDao.deduceProductQuantityFromInventory(userid);
+		dbconnDao.addOrder(userId, cid);
+		dbconnDao.deduceProductQuantityFromInventory(userId);
 		wallet.balance -= totalAmount;
-		wallet.point += totalAmount / 10;
 		dbconnDao.updateWallet(wallet);
 		System.out.println("Order placed successfully.\n");
 	}
@@ -141,20 +132,18 @@ public class CustomerService extends UserService {
 
 	public boolean checkValidPurchase(int userId) throws SQLException, ClassNotFoundException {
 		ResultSet resultSet = dbconnDao.getCartElements(userId);
-
+		
 		while (resultSet.next()) {
-			int pid = resultSet.getInt("productid");
-			int quantity = resultSet.getInt("quantity");
-			ResultSet productSet = dbconnDao.getProductFromId(pid);
-			if (!productSet.next()) {
+			if(!resultSet.getString("productstatus").equals(ProductStatus.Available.toString())) {
 				return false;
 			}
+			int quantity = resultSet.getInt("quantity");
 
-			int pquantity = productSet.getInt("quantity");
+			int pquantity = resultSet.getInt("productquantity");
 			if (pquantity - quantity < 0) {
 				return false;
 			}
-			productSet.close();
+			
 		}
 		resultSet.close();
 		
@@ -163,14 +152,21 @@ public class CustomerService extends UserService {
 
 	public void viewOrders(int userId) throws SQLException, ClassNotFoundException {
 		System.out.println(" Order History\n");
-		ResultSet orders = dbconnDao.getOrders(userId);
-
+		ResultSet orders = dbconnDao.getUserOrders(userId);
+		System.out.println("Order Id Delivery Address\t Pincode\t" 
+				+"Product Name\t Quantity Price   AddedTime\t Order Status");
 		while (orders.next()) {
 			int orderId = orders.getInt("orderid");
-			String status = orders.getString("status");
-			java.sql.Timestamp addedTime = orders.getTimestamp("addtime");
-
-			System.out.println(orderId + "\t" + status + "\t" + addedTime);
+			String deliveryAddress = orders.getString("address");
+			int pincode = orders.getInt("pincode");
+			String productName = orders.getString("productname");
+			int quantity = orders.getInt("quantity");
+			double price = orders.getDouble("price");
+			Timestamp addedTime = orders.getTimestamp("addtime");
+			String orderStatus = orders.getString("orderstatus");
+			System.out.println(orderId + "\t" +deliveryAddress + "\t" +pincode + "\t" 
+			+productName + "\t" +quantity + "\t" + price +"\t" + addedTime + "\t" + orderStatus);
+			
 		}
 		orders.close();
 		System.out.println();
@@ -185,9 +181,9 @@ public class CustomerService extends UserService {
 		System.out.println("Amount added to wallet successfully.\n");
 	}
 
-	public void viewWallet(int userId) throws ClassNotFoundException {
+	public void viewWallet(int userId) throws ClassNotFoundException, SQLException {
 		Wallet wallet = dbconnDao.getWalletFromId(userId);
-		System.out.println("Balance : " + wallet.balance + "Points : " + wallet.point + "\n");
+		System.out.println("Balance : " + wallet.balance + " Points : " + wallet.point + "\n");
 	}
 
 	public void redeemPointsToWallet(int userId) throws ClassNotFoundException, SQLException {
@@ -196,6 +192,6 @@ public class CustomerService extends UserService {
 		System.out.println("Total amount credited to wallet : " + wallet.point / 10);
 		wallet.point = 0;
 		dbconnDao.updateWallet(wallet);
-		System.out.println("Balance : " + wallet.balance + "Points : " + wallet.point + "\n");
+		System.out.println("Balance : " + wallet.balance + " Points : " + wallet.point + "\n");
 	}
 }

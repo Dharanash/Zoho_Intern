@@ -1,11 +1,15 @@
 package online_shopping_system.services;
 
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InputValidationService {
 
-	private final static Scanner sc = new Scanner(System.in);
-
+	private static final Scanner sc = new Scanner(System.in);
+	private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+	private static final Pattern pattern = Pattern.compile(EMAIL_REGEX);
+	
 	public static String getStringInput(String message) {
 		System.out.print(message);
 		String input = sc.nextLine();
@@ -58,4 +62,17 @@ public class InputValidationService {
 		}
 		return false;
 	}
+	
+	public static String getValidEmail(String message) {
+        while (true) {
+            System.out.print(message);
+            String email = sc.nextLine();
+            Matcher matcher = pattern.matcher(email);
+            if (matcher.matches()) {
+                return email;
+            } else {
+                System.out.println("Invalid email address. Please try again.");
+            }
+        }
+    }
 }

@@ -2,8 +2,11 @@ package online_shopping_system.services;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
+import online_shopping_system.Exceptions.UserNotifyException;
 import online_shopping_system.POJO.User;
+import online_shopping_system.POJO.Wallet;
 import online_shopping_system.enums.OrderStatus;
 import online_shopping_system.enums.Role;
 
@@ -18,36 +21,22 @@ public class AdminService extends ManagerService {
 	public void viewAllOrders() throws SQLException, ClassNotFoundException {
 		System.out.println(" Order History\n");
 		ResultSet orders = dbconnDao.getAllOrders();
-
+		System.out.println(
+				"Order Id User Id Delivery Address\t Pincode\t" + "Product Name\t Quantity   Price   AddedTime\t Order Status");
 		while (orders.next()) {
 			int orderId = orders.getInt("orderid");
 			int userId = orders.getInt("userid");
-			String status = orders.getString("status");
-			int deliveryAddressId = orders.getInt("customer_detailsid");
-			java.sql.Timestamp addedTime = orders.getTimestamp("addtime");
-
-			System.out.println(orderId + "\t" + userId + "\t" + addedTime + "\t" + deliveryAddressId + "\t" + status);
+			String deliveryAddress = orders.getString("address");
+			int pincode = orders.getInt("pincode");
+			String productName = orders.getString("productname");
+			int quantity = orders.getInt("quantity");
+			double price = orders.getInt("price");
+			Timestamp addedTime = orders.getTimestamp("addtime");
+			String orderStatus = orders.getString("orderstatus");
+			System.out.println(orderId + "\t" + userId + "\t" + deliveryAddress + "\t" + pincode + "\t" + productName
+					+ "\t" + quantity + "\t" + price + "\t" + addedTime + "\t" + orderStatus);
 		}
 		orders.close();
 		System.out.println();
-	}
-
-	public void approveOrder() throws SQLException, ClassNotFoundException {
-		int orderId = InputValidationService.getIntegerInput("Enter order id : ");
-		try(ResultSet orderSt = dbconnDao.getOrderFromId(orderId)){
-			if(orderSt.next()) {
-				String orderStatus = orderSt.getString("status");
-				if(orderStatus.equalsIgnoreCase(OrderStatus.Cancelled.toString())) {
-					System.out.println("Order cancelled.");
-					return;
-				}
-				dbconnDao.updateOrderStatus(orderId, OrderStatus.Approved);
-				System.out.println("Order with id " + orderId + " approved for delivery.");
-			}
-			else {
-				System.out.println("Given order id does not exist.");
-				return;
-			}
-		}
 	}
 }

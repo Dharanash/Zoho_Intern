@@ -2,8 +2,10 @@ package online_shopping_system.services;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import online_shopping_system.DAO.DbConnectionDao;
+import online_shopping_system.Exceptions.UserNotifyException;
 import online_shopping_system.POJO.Product;
 import online_shopping_system.POJO.User;
 import online_shopping_system.POJO.Wallet;
@@ -14,7 +16,7 @@ public class UserService {
 	protected static DbConnectionDao dbconnDao=new DbConnectionDao();
 
 	public User login() throws ClassNotFoundException, SQLException {
-		String userEmail = InputValidationService.getStringInput("Enter your email : ");
+		String userEmail = InputValidationService.getValidEmail("Enter your email : ");
 		String password = InputValidationService.getStringInput("Enter your password : ");
 		System.out.println();
 		return dbconnDao.checkUser(userEmail, password);
@@ -35,7 +37,7 @@ public class UserService {
 
 	public User createuser(Role role) throws ClassNotFoundException, SQLException {
 
-		String email = InputValidationService.getStringInput("Enter email : ");
+		String email = InputValidationService.getValidEmail("Enter email : ");
 		while (dbconnDao.isUserExist(email)) {
 			System.out.println("This email already exist, try with another.\n");
 			email = InputValidationService.getStringInput("Enter email : ");
@@ -46,22 +48,28 @@ public class UserService {
 		return new User(name, password, role.getRoleId(), email, phoneNumber);
 	}
 
-	public void changePassword(User user) throws ClassNotFoundException, SQLException {
+	public void changePassword(User user) throws ClassNotFoundException, SQLException, UserNotifyException {
 		String opassword = InputValidationService.getStringInput("Enter your old password : ");
-		if (EncryptionService.isPasswordMatch(opassword, user.password)) {
-			String npassword = InputValidationService.getStringInput("Enter your new password : ");
-			user.password = npassword;
-			dbconnDao.updateUserPassword(user);
-			System.out.println("Password updated successfully\n");
-			return;
+		if (!EncryptionService.isPasswordMatch(opassword, user.password)) {
+			throw new UserNotifyException("Invalid password!");
 		}
 
-		System.out.println("Invalid Password\n");
+		String npassword = InputValidationService.getStringInput("Enter your new password : ");
+		user.password = npassword;
+		dbconnDao.updateUserPassword(user);
+		System.out.println("Password updated successfully\n");
 		return;
 	}
 
-	public void viewInventory(int roleId) throws ClassNotFoundException, SQLException {
-		ResultSet resultSet = dbconnDao.getInventory(roleId);
+	public void viewInventory(int userId, int roleId) throws ClassNotFoundException, SQLException {
+		ResultSet resultSet = dbconnDao.getInventory(userId, roleId);
+		if(roleId != Role.Customer.getRoleId()) {
+			System.out.println("Product Id Product Name\t Description\t Price\t Quantity\t"
+					+ "CreatedBy\t ModifiedBy\t CreatedTime\t ModifiedTime\t ProductStatus");
+		}
+		else {
+			System.out.println("Product Id Name\t Description\t Price\t Quantity");
+		}
 
 			while (resultSet.next()) {
 				int pid = resultSet.getInt("productid");
@@ -71,13 +79,13 @@ public class UserService {
 				int quantity = resultSet.getInt("quantity");
 
 				if (roleId != Role.Customer.getRoleId()) {
-					String createdBy = dbconnDao.getUserName(resultSet.getInt("createdBy"));
-					String modifiedBy = dbconnDao.getUserName(resultSet.getInt("modifiedBy"));
-					java.sql.Timestamp createdTime = resultSet.getTimestamp("createdTime");
-					java.sql.Timestamp modifiedTime = resultSet.getTimestamp("modifiedTime");
-
+					String createdBy = resultSet.getString("createdByName");
+					String modifiedBy = resultSet.getString("modifiedByName");
+					Timestamp createdTime = resultSet.getTimestamp("createdTime");
+					Timestamp modifiedTime = resultSet.getTimestamp("modifiedTime");
+					String productStatus = resultSet.getString("productstatus");
 					System.out.println(pid + "\t" + name + "\t" + description + "\t" + price + "\t" + quantity + "\t"
-							+ createdBy + "\t" + modifiedBy + "\t" + createdTime + "\t" + modifiedTime);
+							+ createdBy + "\t" + modifiedBy + "\t" + createdTime + "\t" + modifiedTime+"\t" + productStatus);
 				} else {
 					System.out.println(pid + "\t" + name + "\t" + description + "\t" + price + "\t" + quantity);
 				}
@@ -86,48 +94,18 @@ public class UserService {
 			resultSet.close();
 	}
 
-	public void viewOrderDetails() throws SQLException, ClassNotFoundException {
-		int orderId = InputValidationService.getIntegerInput("Enter order id : ");
-		if (!dbconnDao.isOrderExist(orderId)) {
-			System.out.println("Given order id does not exist.");
-			return;
-		}
-		System.out.println(" Order Details\n");
-		double totalAmount = 0;
-		try (ResultSet orderdetails = dbconnDao.getOrderDetails(orderId)) {
-
-			while (orderdetails.next()) {
-				int pid = orderdetails.getInt("productid");
-				try (ResultSet productResult = dbconnDao.getProductFromId(pid)) {
-					String productName = "No Longer Available";
-					if (productResult.next()) {
-						productName = productResult.getString("productname");
-					}
-
-					double price = orderdetails.getDouble("productprice");
-					int quantity = orderdetails.getInt("quantity");
-					totalAmount += price * quantity;
-					System.out.println(productName + "\t" + price + "\t" + quantity);
-				}
-			}
-		}
-		System.out.println("Orders total amount : " + totalAmount + "\n");
-	}
-
-	public void cancelOrder(int userId) throws SQLException, ClassNotFoundException {
+	public void cancelOrder(int userId) throws SQLException, ClassNotFoundException, UserNotifyException {
 		int orderId = InputValidationService.getIntegerInput("Enter order id : ");
 		try(ResultSet orderSt = dbconnDao.getOrderFromId(orderId)){
 			if(orderSt.next()) {
-				String orderStatus = orderSt.getString("status");
-				if(orderStatus.equalsIgnoreCase(OrderStatus.Cancelled.toString())) {
-					System.out.println("Order already cancelled.");
-					return;
+				String orderStatus = orderSt.getString("orderstatus");
+				if(!orderStatus.equalsIgnoreCase(OrderStatus.Placed.toString())) {
+					throw new UserNotifyException("Order already "+orderStatus);
 				}
 				
 			}
 			else {
-				System.out.println("Given order id does not exist.");
-				return;
+				throw new UserNotifyException("Given order id does not exist.");
 			}
 		}
 
