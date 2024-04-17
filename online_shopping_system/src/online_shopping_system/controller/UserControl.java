@@ -2,7 +2,6 @@ package online_shopping_system.controller;
 
 import java.sql.SQLException;
 
-import online_shopping_system.DAO.DbConnectionDao;
 import online_shopping_system.Exceptions.UserNotifyException;
 import online_shopping_system.POJO.User;
 import online_shopping_system.enums.Role;
@@ -32,7 +31,7 @@ public class UserControl {
 		boolean exit = false;
 		try {
 			while (!exit) {
-
+				try {
 				int option = InputValidationService
 						.getIntegerInput(" 1 - Login\n 2 - Register\n 3 - Exit\nEnter your option : ");
 				switch (option) {
@@ -41,7 +40,7 @@ public class UserControl {
 					if (user != null) {
 						implementUserControl(user);
 					} else {
-						System.out.println("Invalid user email/password !\n");
+						throw new UserNotifyException("Invalid user email/password !\n");
 					}
 					break;
 				case 2:
@@ -51,9 +50,11 @@ public class UserControl {
 					exit = true;
 					break;
 				default:
-					System.out.println("Kindly enter from available options!\n");
-					break;
+					throw new UserNotifyException("Kindly enter from available options!\n");
 
+				}
+				} catch (UserNotifyException e) {
+					System.out.println(e.getMessage());
 				}
 			}
 		} catch (ClassNotFoundException e) {
@@ -61,6 +62,8 @@ public class UserControl {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println("\n Thank you");
 	}
 
 	public void implementUserControl(User user) throws ClassNotFoundException {
@@ -221,7 +224,7 @@ public class UserControl {
 					customerService.addCustomerDetails(user.userId);
 					break;
 				case 15:
-					customerService.updateCustomerDetails();
+					customerService.updateCustomerDetails(user.userId);
 					break;
 				case 16:
 					logout = true;

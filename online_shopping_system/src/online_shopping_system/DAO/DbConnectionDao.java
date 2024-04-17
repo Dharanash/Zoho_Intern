@@ -64,13 +64,14 @@ public class DbConnectionDao {
 		}
 	}
 
-	public int updateCustomerDetails(String address, int pincode, int customerId)
+	public int updateCustomerDetails(String address, int pincode, int customerId, int userId)
 			throws SQLException, ClassNotFoundException {
-		String sql = "UPDATE customer_details SET address=?, pincode=? WHERE customerId=?";
+		String sql = "UPDATE customer_details SET address=?, pincode=? WHERE customer_detailsid=? and userid=?";
 		try (Connection connection = getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
 			st.setString(1, address);
 			st.setInt(2, pincode);
 			st.setInt(3, customerId);
+			st.setInt(4, userId);
 			return st.executeUpdate();
 		}
 	}
@@ -212,7 +213,7 @@ public class DbConnectionDao {
 
 	public String getUserName(int userId) throws ClassNotFoundException, SQLException {
 		String query = "SELECT name FROM users WHERE userid = ?";
-		String username = "No Longer availble";
+		String username = "";
 
 		try (Connection connection = getConnection();
 				PreparedStatement statement = connection.prepareStatement(query)) {
@@ -417,9 +418,9 @@ public class DbConnectionDao {
 	public ResultSet getOrdersForDispatch(int userId ) throws ClassNotFoundException, SQLException {
 		String query = "SELECT o.*,c.address,c.pincode,i.productname,u.name FROM orders o "
 				+ "JOIN customer_details c ON o.customer_detailsid = c.customer_detailsid "
-				+ "JOIN inventory i ON o.productid = i.productid"
-				+ "JOIN users u ON o.userid = u.userid"
-				+ " where i.createdby =?";
+				+ "JOIN inventory i ON o.productid = i.productid "
+				+ "JOIN users u ON o.userid = u.userid "
+				+ "where i.createdby =?";
 		return getOrders(userId, query);
 	}
 
@@ -435,9 +436,10 @@ public class DbConnectionDao {
 	}
 
 	public ResultSet getAllOrders() throws SQLException, ClassNotFoundException {
-		String query = "SELECT " + "o.*,c.address,c.pincode,i.productname " + "FROM orders o "
+		String query = "SELECT o.*,c.address,c.pincode,i.productname,u.name FROM orders o "
 				+ "JOIN customer_details c ON o.customer_detailsid = c.customer_detailsid "
-				+ "JOIN inventory i ON o.productid = i.productid ";
+				+ "JOIN inventory i ON o.productid = i.productid "
+				+ "JOIN users u ON o.userid = u.userid";
 		Connection connection = getConnection();
 		PreparedStatement statement = connection.prepareStatement(query);
 		ResultSet resultSet = statement.executeQuery();

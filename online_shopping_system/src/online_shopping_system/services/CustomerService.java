@@ -17,11 +17,11 @@ public class CustomerService extends UserService {
 		System.out.println("Personal details added successfully.\n");
 	}
 	
-	public void updateCustomerDetails() throws ClassNotFoundException, SQLException, UserNotifyException {
+	public void updateCustomerDetails(int userId) throws ClassNotFoundException, SQLException, UserNotifyException {
 		int cdId = InputValidationService.getIntegerInput("Enter your address id : ");
 		String address = InputValidationService.getStringInput("Enter your address : ");
 		int pincode = InputValidationService.getIntegerInput("Enter your pincode : ");
-		if(dbconnDao.updateCustomerDetails(address, pincode, cdId)==0) {
+		if(dbconnDao.updateCustomerDetails(address, pincode, cdId, userId)==0) {
 			throw new UserNotifyException("Given personal details id doesn't exist.\n");
 		}
 		System.out.println("Personal details updated successfully.\n");

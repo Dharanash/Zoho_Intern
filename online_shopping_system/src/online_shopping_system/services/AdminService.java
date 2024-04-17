@@ -4,10 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import online_shopping_system.Exceptions.UserNotifyException;
 import online_shopping_system.POJO.User;
-import online_shopping_system.POJO.Wallet;
-import online_shopping_system.enums.OrderStatus;
 import online_shopping_system.enums.Role;
 
 public class AdminService extends ManagerService {
@@ -22,10 +19,10 @@ public class AdminService extends ManagerService {
 		System.out.println(" Order History\n");
 		ResultSet orders = dbconnDao.getAllOrders();
 		System.out.println(
-				"Order Id User Id Delivery Address\t Pincode\t" + "Product Name\t Quantity   Price   AddedTime\t Order Status");
+				"Order Id  User Id  Delivery Address\t Pincode\t" + "Product Name\t Quantity   Price   AddedTime\t Order Status");
 		while (orders.next()) {
 			int orderId = orders.getInt("orderid");
-			int userId = orders.getInt("userid");
+			String uname = orders.getString("name");
 			String deliveryAddress = orders.getString("address");
 			int pincode = orders.getInt("pincode");
 			String productName = orders.getString("productname");
@@ -33,7 +30,7 @@ public class AdminService extends ManagerService {
 			double price = orders.getInt("price");
 			Timestamp addedTime = orders.getTimestamp("addtime");
 			String orderStatus = orders.getString("orderstatus");
-			System.out.println(orderId + "\t" + userId + "\t" + deliveryAddress + "\t" + pincode + "\t" + productName
+			System.out.println(orderId + "\t" + uname + "\t" + deliveryAddress + "\t" + pincode + "\t" + productName
 					+ "\t" + quantity + "\t" + price + "\t" + addedTime + "\t" + orderStatus);
 		}
 		orders.close();

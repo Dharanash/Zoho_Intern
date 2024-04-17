@@ -6,7 +6,6 @@ import java.sql.Timestamp;
 
 import online_shopping_system.DAO.DbConnectionDao;
 import online_shopping_system.Exceptions.UserNotifyException;
-import online_shopping_system.POJO.Product;
 import online_shopping_system.POJO.User;
 import online_shopping_system.POJO.Wallet;
 import online_shopping_system.enums.OrderStatus;
@@ -40,7 +39,7 @@ public class UserService {
 		String email = InputValidationService.getValidEmail("Enter email : ");
 		while (dbconnDao.isUserExist(email)) {
 			System.out.println("This email already exist, try with another.\n");
-			email = InputValidationService.getStringInput("Enter email : ");
+			email = InputValidationService.getValidEmail("Enter email : ");
 		}
 		String name = InputValidationService.getStringInput("Enter name : ");
 		String password = InputValidationService.getStringInput("Enter password : ");
