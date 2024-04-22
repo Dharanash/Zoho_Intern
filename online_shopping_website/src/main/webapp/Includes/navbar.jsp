@@ -1,5 +1,5 @@
 <%@page import="online_shopping_website.model.*"%>
-<%@page import="online_shopping_website.servlets.*"%>
+<%@page import="online_shopping_website.controller.*"%>
 <%@page import="online_shopping_website.enums.*"%>
 <%@page import="java.util.*"%>
 <%

@@ -1,4 +1,4 @@
-package online_shopping_website.servlets;
+package online_shopping_website.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -109,8 +109,7 @@ public class OrderServlet extends HttpServlet {
 		int id = Integer.parseInt(request.getParameter("id"));
 		String address = request.getParameter("address");
 		int pincode = Integer.parseInt(request.getParameter("pincode"));
-		ArrayList<DeliveryDetails> deliveryDetails = (ArrayList<DeliveryDetails>) request.getSession()
-				.getAttribute("deliveryDetails");
+		ArrayList<DeliveryDetails> deliveryDetails = (ArrayList<DeliveryDetails>) request.getSession().getAttribute("deliveryDetails");
 		DeliveryDetails detail = UtilityService.getDeliveryDetailFromId(deliveryDetails, id);
 		detail.setAddress(address);
 		detail.setPincode(pincode);
@@ -135,7 +134,7 @@ public class OrderServlet extends HttpServlet {
 		int deliveryDetailsId = Integer.parseInt(request.getParameter("deliveryDetailId"));
 		ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
 		orderDAO.addOrder(cart, user.userId, deliveryDetailsId);
-
+		request.getSession().removeAttribute("orders");
 		Wallet wallet = (Wallet) request.getSession().getAttribute("wallet");
 		double totalAmount = Double.parseDouble(request.getSession().getAttribute("cartTotal").toString());
 		wallet.balance -= totalAmount;

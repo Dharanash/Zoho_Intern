@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 <%@page import="online_shopping_website.model.*"%>
-<%@page import="online_shopping_website.servlets.*"%>
+<%@page import="online_shopping_website.controller.*"%>
 <%@page import="java.util.*"%>
 <%
 User curUser=(User) session.getAttribute("auth");

@@ -1,4 +1,4 @@
-package online_shopping_website.servlets;
+package online_shopping_website.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;

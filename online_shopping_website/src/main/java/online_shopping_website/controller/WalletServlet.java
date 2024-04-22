@@ -1,4 +1,4 @@
-package online_shopping_website.servlets;
+package online_shopping_website.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -50,8 +50,9 @@ public class WalletServlet extends HttpServlet {
 	protected void getWallet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
+		if(request.getSession().getAttribute("wallet")==null) {
 		Wallet wallet = walletDAO.getWalletFromId(user.userId);
-		request.getSession().setAttribute("wallet", wallet);
+		request.getSession().setAttribute("wallet", wallet);}
 		response.sendRedirect("../customer/wallet.jsp");
 	}
 	
