@@ -125,7 +125,8 @@ public class InventoryServlet extends HttpServlet {
 		int productId = Integer.parseInt( request.getParameter("id"));
 		ArrayList<DetailedProduct> products = (ArrayList<DetailedProduct>)request.getSession().getAttribute("products");
 		UtilityService.removeProductFromId(products, productId);
-			inventoryDAO.removeProductFromInventory(user.userId, productId);
+		inventoryDAO.removeProductFromInventory(user.userId, productId);
+		response.sendRedirect("../admin/viewInventory.jsp");
 	}
 
 }

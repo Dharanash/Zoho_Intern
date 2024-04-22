@@ -83,8 +83,10 @@ public class OrderServlet extends HttpServlet {
 	protected void getDeliveryDetails(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
+		if(request.getSession().getAttribute("deliveryDetails")==null) {
 		ArrayList<DeliveryDetails> deliveryDetails = orderDAO.getCustomerDetails(user.userId);
 		request.getSession().setAttribute("deliveryDetails", deliveryDetails);
+		}
 		response.sendRedirect("../customer/deliveryDetails.jsp");
 	}
 

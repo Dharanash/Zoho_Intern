@@ -62,13 +62,7 @@ public class UserServlet extends HttpServlet {
 				throw new UserNotifyException("Invalid Email / Password");
 			} else {
 				request.getSession().setAttribute("auth", user);
-				if (user.role == Role.Admin) {
-					response.sendRedirect("../admin/index.jsp");
-				} else if (user.role == Role.Manager) {
-					response.sendRedirect("../admin/index.jsp");
-				} else if (user.role == Role.Customer) {
-					response.sendRedirect("../admin/index.jsp");
-				}
+				response.sendRedirect("../user/index.jsp");
 			}
 		} catch (UserNotifyException e) {
 			response.sendRedirect("../login.jsp?loginErrorMessage=" + e.getMessage());

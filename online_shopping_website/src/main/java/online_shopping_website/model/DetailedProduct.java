@@ -1,5 +1,6 @@
 package online_shopping_website.model;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 public class DetailedProduct extends Product {

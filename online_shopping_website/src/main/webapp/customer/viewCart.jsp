@@ -7,7 +7,6 @@ ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
 <link rel="stylesheet" type="text/css" href="../CSS/userpage-style.css">
 <%@include file="../Includes/head.jsp"%>
 <meta charset="ISO-8859-1">

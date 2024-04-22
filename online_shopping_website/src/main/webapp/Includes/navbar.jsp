@@ -8,14 +8,15 @@ User user=(User) session.getAttribute("auth");
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
 	<h3>Online Shopping Website</h3>
 	<div class="container">
-		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<div class="collapse navbar-collapse">
 			<ul class="navbar-nav ml-auto">
-
+				
+				<li class="nav-item"><a class="nav-link"
+					href="../user/index.jsp">Home</a></li>
 				<%
 				if (user.role == Role.Admin) {
 				%>
-				<li class="nav-item"><a class="nav-link"
-					href="../admin/index.jsp">Home</a></li>
+				
 				<li class="nav-item"><a class="nav-link"
 					href="../InventoryServlet/getInventory">Inventory </a></li>
 				<li class="nav-item"><a class="nav-link"
@@ -28,16 +29,12 @@ User user=(User) session.getAttribute("auth");
 				} else if (user.role == Role.Manager) {
 				%>
 				<li class="nav-item"><a class="nav-link"
-					href="../admin/index.jsp">Home</a></li>
-				<li class="nav-item"><a class="nav-link"
 					href="../InventoryServlet/getInventory">Inventory </a></li>
 				<li class="nav-item"><a class="nav-link"
 					href="../OrderServlet/getReceivedOrders">Received Orders </a></li>
 				<%
 				} else if (user.role == Role.Customer) {
 				%>
-				<li class="nav-item"><a class="nav-link"
-					href="../customer/index.jsp">Home</a></li>
 				<li class="nav-item"><a class="nav-link"
 					href="../InventoryServlet/getInventory">View Products </a></li>
 				<li class="nav-item"><a class="nav-link"
