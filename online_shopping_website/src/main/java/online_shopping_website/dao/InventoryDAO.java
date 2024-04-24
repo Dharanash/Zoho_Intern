@@ -31,27 +31,21 @@ public class InventoryDAO {
 		return userId;
 	}
 	
-	public int addProduct(DetailedProduct product) throws ClassNotFoundException, SQLException {
-		String sql = "INSERT INTO inventory (productname, description, price, createdby, modifiedby, createdtime, modifiedtime, productstatusid) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-		int generatedDetailedProductId = -1;
+	public void addProduct(DetailedProduct product) throws ClassNotFoundException, SQLException {
+		String sql = "INSERT INTO inventory (productname, description, price, createdby, modifiedby, createdtime, modifiedtime, productstatusid, quantity) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)";
 		try (Connection connection = DatabaseConnectionDAO.getConnection();
-				PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+				PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setString(1, product.name);
 			statement.setString(2, product.description);
-			statement.setDouble(3, product.price);
-			statement.setInt(4, getUserId(product.createdBy));
-			statement.setInt(5, getUserId(product.modifiedBy));
+			statement.setDouble(3,Math.abs(product.price));
+			statement.setInt(4, product.createdById);
+			statement.setInt(5, product.modifiedById);
 			statement.setTimestamp(6, product.createdTime);
 			statement.setTimestamp(7, product.modifiedTime);
 			statement.setInt(8, product.productStatusId);
+			statement.setInt(9,Math.abs(product.quantity));
 			statement.executeUpdate();
-			try (ResultSet resultSet = statement.getGeneratedKeys()) {
-	            if (resultSet.next()) {
-	                generatedDetailedProductId = resultSet.getInt(1);
-	            }
-	        }
-			return generatedDetailedProductId;
 		}
 		
 	}
@@ -59,7 +53,7 @@ public class InventoryDAO {
 	public ArrayList<DetailedProduct> getInventory(int userId, Role role) throws ClassNotFoundException, SQLException {
 		String query="";
 		if (role == Role.Customer) {
-			query = "SELECT productid, productname, description, price, productstatusid, p.status as productStatus FROM inventory "
+			query = "SELECT productid, productname, description, price,quantity, productstatusid, p.status as productStatus FROM inventory "
 					+ "left join productstatus p on productstatusid=p.id "
 					+ "where productstatusid<3";
 		} else if (role == Role.Manager) {
@@ -69,7 +63,7 @@ public class InventoryDAO {
 					+ "left join productstatus p on productstatusid=p.id "
 					+ "WHERE i.createdby = ? AND i.productstatusid <3";
 		} else {
-			query = "SELECT i.*," + "u1.email AS createdByEmail,u2.email AS modifiedByEmail, p.status as productStatus FROM inventory i "
+			query = "SELECT i.*, u1.email AS createdByEmail,u2.email AS modifiedByEmail, p.status as productStatus FROM inventory i "
 					+ "LEFT JOIN users u1 ON i.createdby = u1.userid "
 					+ "LEFT JOIN users u2 ON i.modifiedby = u2.userid "
 					+ "left join productstatus p on productstatusid=p.id "
@@ -89,15 +83,16 @@ public class InventoryDAO {
 	public void updateProduct(int productId, DetailedProduct updatedDetailedProduct) throws ClassNotFoundException, SQLException {
 		try (Connection conn = DatabaseConnectionDAO.getConnection();
 				PreparedStatement statement = conn.prepareStatement("UPDATE inventory "
-						+ "SET productname = ?, description = ?, price = ?, modifiedBy = ?, modifiedTime = ?, productstatusid=? "
+						+ "SET productname = ?, description = ?, price = ?, modifiedBy = ?, modifiedTime = ?, productstatusid=?, quantity=? "
 						+ "WHERE productid = ?")) {
 			statement.setString(1, updatedDetailedProduct.name);
 			statement.setString(2, updatedDetailedProduct.description);
-			statement.setDouble(3, updatedDetailedProduct.price);
-			statement.setInt(4, getUserId(updatedDetailedProduct.modifiedBy));
+			statement.setDouble(3,Math.abs(updatedDetailedProduct.price));
+			statement.setInt(4, updatedDetailedProduct.modifiedById);
 			statement.setTimestamp(5, updatedDetailedProduct.modifiedTime);
 			statement.setInt(6, updatedDetailedProduct.productStatusId);
-			statement.setInt(7, productId);
+			statement.setInt(7,Math.abs(updatedDetailedProduct.quantity));
+			statement.setInt(8, productId);
 
 			statement.executeUpdate();
 		}
@@ -120,6 +115,16 @@ public class InventoryDAO {
 		try (Connection conn =  DatabaseConnectionDAO.getConnection(); PreparedStatement statement = conn.prepareStatement(query)) {
 			ResultSet resultSet = statement.executeQuery();
 			return MappingService.mapToProductStatus(resultSet);
+		}
+	}
+	
+	public DetailedProduct getProductFromId(int productId, Role role) throws ClassNotFoundException, SQLException {
+		String query = "SELECT i.*, p.status as productStatus FROM inventory as i inner join productstatus p on p.id=i.productstatusid and i.productid=? ";
+		try(Connection conn = DatabaseConnectionDAO.getConnection();
+		PreparedStatement st = conn.prepareStatement(query)){
+		st.setInt(1, productId);
+		ResultSet resultSet= st.executeQuery();
+		return MappingService.mapToProduct(resultSet, role);
 		}
 	}
 }

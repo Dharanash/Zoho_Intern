@@ -1,17 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1"%>
 <%
-User auth = (User) request.getSession().getAttribute("auth");
-if (auth == null) {
-	response.sendRedirect("../login.jsp");
-}
-ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
-ArrayList<DeliveryDetails> deliveryDetails=null;
-if(request.getSession().getAttribute("deliveryDetails")!=null){
-	deliveryDetails=(ArrayList<DeliveryDetails>) request.getSession().getAttribute("deliveryDetails");
-}
-Wallet wallet = (Wallet) request.getSession().getAttribute("wallet");
-double totalAmount =Double.parseDouble(request.getSession().getAttribute("cartTotal").toString());
+ArrayList<Cart> cart = (ArrayList<Cart>) request.getAttribute("cart");
+ArrayList<DeliveryDetails> deliveryDetails=(ArrayList<DeliveryDetails>) request.getAttribute("deliveryDetails");
+Wallet wallet = (Wallet) request.getAttribute("wallet");
+double totalAmount =Double.parseDouble(request.getAttribute("cartTotal").toString());
 double balance=wallet.getBalance();
 %>
 <!DOCTYPE html>
@@ -25,6 +18,23 @@ double balance=wallet.getBalance();
 </head>
 <body>
 	<%@include file="../Includes/navbar.jsp"%>
+	
+	<%
+	if (request.getParameter("errorMessage") != null) {
+	%>
+	<div id="messageBox">
+		<p class="error"><%=request.getParameter("errorMessage")%></p>
+	</div>
+	<%
+	}
+	else if(request.getParameter("successMessage") != null){
+	%>
+	<div id="messageBox">
+		<p class="success"><%=request.getParameter("successMessage")%></p>
+	</div>
+	<%
+	}
+	%>
 
 	<div class="container my-3">
 		<div class="d-flex py-3">
@@ -72,7 +82,7 @@ double balance=wallet.getBalance();
 			</div>
 			<%}else{ %>
 			
-			<form action="../OrderServlet/postOrder" method="post">
+			<form action="../orders/placeorder" method="post">
 					<div class="form-group">
 						<label>Select Delivery Details :</label> <select name="deliveryDetailId"
 							class="form-control" required>
@@ -90,7 +100,6 @@ double balance=wallet.getBalance();
 					</div>
 				</form>
 				<% } %>
-	
 	</div>
 
 </body>

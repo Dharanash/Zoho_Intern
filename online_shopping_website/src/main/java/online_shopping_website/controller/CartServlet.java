@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import online_shopping_website.dao.CartDAO;
+import online_shopping_website.dao.OrderDAO;
 import online_shopping_website.exceptions.UserNotifyException;
 import online_shopping_website.model.Cart;
 import online_shopping_website.model.Product;
@@ -20,7 +21,7 @@ import online_shopping_website.services.UtilityService;
 /**
  * Servlet implementation class CartServlet
  */
-@WebServlet("/CartServlet/*")
+@WebServlet("/cart/*")
 public class CartServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private CartDAO cartDAO;
@@ -30,21 +31,18 @@ public class CartServlet extends HttpServlet {
 		cartDAO = new CartDAO();
 	}
 
-	protected void service(HttpServletRequest request, HttpServletResponse response)
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String action = request.getPathInfo();
 		try {
 			switch (action) {
-			case "/getCart":
+			case "/get":
 				getCartProducts(request, response);
 				break;
-			case "/addToCart":
+			case "/add":
 				addToCart(request, response);
 				break;
-			case "/updateCart":
-				updateCartProducts(request, response);
-				break;
-			case "/removeFromCart":
+			case "/remove":
 				removeFromCart(request, response);
 				break;
 			default:
@@ -54,67 +52,63 @@ public class CartServlet extends HttpServlet {
 			throw new ServletException(ex);
 		}
 	}
-
+	
 	protected void getCartProducts(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
-		ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
-		if (cart == null) {
-			cart = cartDAO.getCartElements(user.userId);
-			request.getSession().setAttribute("cart", cart);
-		}
-		request.getSession().setAttribute("cartTotal", UtilityService.getTotalAmount(cart));
-		response.sendRedirect("../customer/viewCart.jsp");
+		ArrayList<Cart> cart = cartDAO.getCartElements(user.userId);
+		request.setAttribute("cart", cart);
+		request.setAttribute("cartTotal", UtilityService.getTotalAmount(cart));
+		request.getRequestDispatcher("../customer/viewCart.jsp").forward(request, response);
 	}
-
+	
 	protected void addToCart(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
-		ArrayList<Product> products = (ArrayList<Product>) request.getSession().getAttribute("products");
 		int productId = Integer.parseInt(request.getParameter("id"));
-		Product product = UtilityService.getProductFromId(products, productId);
 		try {
 			ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
-			if (cart == null) {
-				cart = cartDAO.getCartElements(user.userId);
-				request.getSession().setAttribute("cart", cart);
-			}
-			if (UtilityService.isProductExistInCart(productId, cart)) {
+			if (cartDAO.isProductExistInCart(productId, user.userId)) {
 				throw new UserNotifyException("Product already exist.");
 			} else {
 				cartDAO.addToCart(user.userId, productId);
-				cart.add(new Cart(product.productId, product.name, product.description, product.price,
-						product.productStatus, product.productStatusId));
-				request.getSession().setAttribute("cartTotal", UtilityService.getTotalAmount(cart));
 				throw new UserNotifyException("Product added to cart successfully");
 			}
 		} catch (UserNotifyException e) {
-			response.sendRedirect("../customer/viewProducts.jsp?viewProductsMessage=" + e.getMessage());
+			response.sendRedirect("../inventory/get?successMessage=" + e.getMessage());
+		}
+	}
+	
+	protected void removeFromCart(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException, ClassNotFoundException, SQLException {
+		User user = (User) request.getSession().getAttribute("auth");
+		int productId = Integer.parseInt(request.getParameter("id"));
+		cartDAO.removeProductInCart(productId, user.userId);
+		response.sendRedirect("../cart/get?successMessage=Product removed from cart.");
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		String action = request.getPathInfo();
+		try {
+			switch (action) {
+			case "/update":
+				updateCartProducts(request, response);
+				break;
+			default:
+				break;
+			}
+		} catch (SQLException | ClassNotFoundException ex) {
+			throw new ServletException(ex);
 		}
 	}
 
 	protected void updateCartProducts(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
-		ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
 		int productId = Integer.parseInt(request.getParameter("productId"));
-		int productQuantity = Integer.parseInt(request.getParameter("productQuantity"));
-		Cart cartElement = UtilityService.getProductFromId(cart, productId);
-		cartElement.setProductQuantity(productQuantity);
+		int productQuantity =Math.abs(Integer.parseInt(request.getParameter("productQuantity")));
 		cartDAO.updateProductQuantityInCart(productId, user.userId, productQuantity);
-		request.getSession().setAttribute("cartTotal", UtilityService.getTotalAmount(cart));
-		response.sendRedirect("../customer/viewCart.jsp");
+		response.sendRedirect("../cart/get?successMessage=Product updated successfully.");
 	}
-
-	protected void removeFromCart(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException, ClassNotFoundException, SQLException {
-		User user = (User) request.getSession().getAttribute("auth");
-		ArrayList<Cart> cart = (ArrayList<Cart>) request.getSession().getAttribute("cart");
-		int productId = Integer.parseInt(request.getParameter("id"));
-		UtilityService.removeProductFromId(cart, productId);
-		cartDAO.removeProductInCart(productId, user.userId);
-		request.getSession().setAttribute("cartTotal", UtilityService.getTotalAmount(cart));
-		response.sendRedirect("../customer/viewCart.jsp");
-	}
-
 }

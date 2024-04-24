@@ -10,34 +10,45 @@ public class Product {
     public String name;
     public String description;
     public double price;
+    public int quantity;
     public String productStatus;
     public int productStatusId;
     
-    public Product(int productId, String name, String description, double price) {
-        this.productId =-1;
+    public Product(int productId, String name, String description, double price, int quantity) {
+        this.productId =productId;
     	this.name = name;
         this.description = description;
         this.price = price;
+        this.quantity=quantity;
     }
     
-    public Product(String name, String description, double price, int productStatusId) {
+    public Product(String name, String description, double price, int quantity, int productStatusId) {
         this.productId =-1;
     	this.name = name;
         this.description = description;
         this.price = price;
+        this.quantity=quantity;
         this.productStatusId = productStatusId;
+        this.productStatus = ProductStatus.Available.toString();
     }
     
-    public Product(int productId, String name, String description, double price,  String productStatus, int prodictStatusId) {
+    public Product(int productId, String name, String description, double price,int quantity,  String productStatus, int prodictStatusId) {
     	this.productId =productId;
     	this.name = name;
         this.description = description;
         this.price = price;
+        this.quantity=quantity;
         this.productStatus = productStatus;
         this.productStatusId=prodictStatusId;
     }
-
     
+	public int getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(int quantity) {
+		this.quantity = quantity;
+	}
 
 	public int getProductId() {
 		return productId;

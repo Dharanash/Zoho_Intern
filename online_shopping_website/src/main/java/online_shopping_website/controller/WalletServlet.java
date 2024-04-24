@@ -12,10 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import online_shopping_website.dao.WalletDAO;
 import online_shopping_website.model.*;
 
-/**
- * Servlet implementation class WalletServlet
- */
-@WebServlet("/WalletServlet/*")
+@WebServlet("/wallet/*")
 public class WalletServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private WalletDAO walletDAO;
@@ -25,19 +22,32 @@ public class WalletServlet extends HttpServlet {
 		walletDAO = new WalletDAO();
 	}
 
-	protected void service(HttpServletRequest request, HttpServletResponse response)
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String action = request.getPathInfo();
 		try {
 			switch (action) {
-			case "/getWallet":
+			case "/get":
 				getWallet(request, response);
 				break;
-			case "/addAmount":
-				addAmountToWallet(request, response);
-				break;
-			case "/redeemPoints":
+			case "/redeem":
 				addPointsToWallet(request, response);
+				break;
+			default:
+				break;
+			}
+		} catch (SQLException | ClassNotFoundException ex) {
+			throw new ServletException(ex);
+		}
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		String action = request.getPathInfo();
+		try {
+			switch (action) {
+			case "/add":
+				addAmountToWallet(request, response);
 				break;
 			default:
 				break;
@@ -50,27 +60,24 @@ public class WalletServlet extends HttpServlet {
 	protected void getWallet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 		User user = (User) request.getSession().getAttribute("auth");
-		if(request.getSession().getAttribute("wallet")==null) {
 		Wallet wallet = walletDAO.getWalletFromId(user.userId);
-		request.getSession().setAttribute("wallet", wallet);}
-		response.sendRedirect("../customer/wallet.jsp");
+		request.setAttribute("wallet", wallet);
+		request.getRequestDispatcher("../customer/wallet.jsp").forward(request, response);
 	}
 	
 	protected void addAmountToWallet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
-		Wallet wallet =(Wallet) request.getSession().getAttribute("wallet");
+		User user = (User) request.getSession().getAttribute("auth");
 		double amount = Double.parseDouble( request.getParameter("amount"));
-		wallet.addAmountToWalletBalance(amount);
-		walletDAO.updateWallet(wallet);
-		response.sendRedirect("../customer/wallet.jsp");
+		walletDAO.addToWalletAmount(user.userId, amount);
+		response.sendRedirect("../wallet/get?successMessage=Amount added successfully.");
 	}
 	
 	protected void addPointsToWallet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
-		Wallet wallet =(Wallet) request.getSession().getAttribute("wallet");
-		wallet.redeemToWalletBalance();
-		walletDAO.updateWallet(wallet);
-		response.sendRedirect("../customer/wallet.jsp");
+		User user = (User) request.getSession().getAttribute("auth");
+		walletDAO.redeemPointsToWalletAmount(user.userId);
+		response.sendRedirect("../wallet/get?successMessage=points redeemed successfully.");
 	}
 
 }

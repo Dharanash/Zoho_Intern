@@ -4,24 +4,23 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="../CSS/userpage-style.css">
-<%@include file="../Includes/head.jsp"%>
+<%@include file="../../Includes/head.jsp"%>
 <meta charset="ISO-8859-1">
 <title>Add Product</title>
 </head>
 <body>
-	<%@include file="../Includes/navbar.jsp"%>
+	<%@include file="../../Includes/navbar.jsp"%>
 	<%
-	HashMap<Integer, String> productStatus = (HashMap<Integer, String>) request.getSession().getAttribute("productStatus");
-	if (request.getParameter("addProductErrorMessage") != null) {
+	if (request.getParameter("errorMessage") != null) {
 	%>
 	<div id="messageBox">
-		<p class="error"><%=request.getParameter("addProductErrorMessage")%></p>
+		<p class="error"><%=request.getParameter("errorMessage")%></p>
 	</div>
 	<%
-	} else if (request.getParameter("addProductSuccessMessage") != null) {
+	} else if (request.getParameter("successMessage") != null) {
 	%>
 	<div id="messageBox">
-		<p class="success"><%=request.getParameter("addProductSuccessMessage")%></p>
+		<p class="success"><%=request.getParameter("successMessage")%></p>
 	</div>
 	<%
 	}
@@ -32,7 +31,7 @@
 		<div class="card w-50">
 			<div class="card-header text-center">Add Product</div>
 			<div class="card-body">
-				<form action="../InventoryServlet/postAddProduct" method="post">
+				<form action="../inventory/addproduct" method="post">
 					<div class="form-group">
 						<label>Enter Product Name : </label> <input type="text"
 							name="pname" class="form-control" required>
@@ -42,18 +41,11 @@
 							name="description" class="form-control" required>
 					</div>
 					<div class="form-group">
-						<label>Select Status:</label> <select name="selectedStatus"
-							class="form-control" required>
-							<%
-							if (productStatus != null) {
-								for (Map.Entry<Integer, String> entry : productStatus.entrySet()) {
-							%>
-							<option value="<%=entry.getKey()%>"><%=entry.getValue()%></option>
-							<% }} %>
-						</select>
+						<label>Enter Quantity : </label> <input type="number" min="0"
+							name="quantity" class="form-control" required>
 					</div>
 					<div class="form-group">
-						<label>Enter Price : </label> <input pattern="[0-9.]{1,}"
+						<label>Enter Price : </label> <input type="number" min="0" step="any"
 							title="Please enter only positive number" name="price"
 							class="form-control" required>
 					</div>

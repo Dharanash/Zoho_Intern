@@ -15,13 +15,10 @@
 	<%@include file="../Includes/navbar.jsp"%>
 	<%
 	User curUser = (User) request.getSession().getAttribute("auth");
-	if (curUser == null) {
-		response.sendRedirect("./login.jsp");
-	}
-	if (request.getParameter("profileSuccessMessage") != null) {
+	if (request.getParameter("successMessage") != null) {
 	%>
 	<div id="messageBox">
-		<p class="success"><%=request.getParameter("profileSuccessMessage")%></p>
+		<p class="success"><%=request.getParameter("successMessage")%></p>
 	</div>
 	<%
 	}
@@ -32,7 +29,7 @@
 		<div class="card w-50">
 			<div class="card-header text-center">For New Register</div>
 			<div class="card-body">
-				<form action="../UserServlet/updateProfile" method="post">
+				<form action="../user/updateprofile" method="post">
 					<input type="hidden" name="id" value="${curUser.getUserId}">
 					<div class="form-group">
 						<label>Enter Name : </label> <input type="text" name="name"
@@ -43,7 +40,8 @@
 							class="form-control" value="<%=curUser.getEmail()%>" disabled>
 					</div>
 					<div class="form-group">
-						<label>Enter Password : </label> <input type="password"
+						<label>Enter Password : </label> <input type="password"  pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{4,}$"
+						title="Password must contain at least 4 characters including 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character."
 							name="password" class="form-control"
 							value="<%=curUser.getPassword()%>" required>
 					</div>

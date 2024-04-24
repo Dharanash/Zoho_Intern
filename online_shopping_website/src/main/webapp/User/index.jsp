@@ -10,12 +10,12 @@ User curUser=(User) session.getAttribute("auth");
 <!DOCTYPE html>
 <html>
 <head>
-<%@include file="/Includes/head.jsp"%>
+<%@include file="../../Includes/head.jsp"%>
 <meta charset="ISO-8859-1">
 <title>Home</title>
 </head>
 <body>
-<%@include file="../Includes/navbar.jsp" %>
+<%@include file="../../Includes/navbar.jsp" %>
 <br><br>
 <div class="container d-flex justify-content-center align-items-center h-100">
 <h2>Welcome <%=curUser.getName()%></h2></div>

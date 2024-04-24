@@ -4,25 +4,25 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="../CSS/userpage-style.css">
-<%@include file="../Includes/head.jsp"%>
+<%@include file="../../Includes/head.jsp"%>
 
 <meta charset="ISO-8859-1">
 <title>Add Manager</title>
 </head>
 <body>
-	<%@include file="../Includes/navbar.jsp"%>
+	<%@include file="../../Includes/navbar.jsp"%>
 	<%
-	if (request.getParameter("addManagerErrorMessage") != null) {
+	if (request.getParameter("errorMessage") != null) {
 	%>
 	<div id="messageBox">
-		<p class="error"><%=request.getParameter("addManagerErrorMessage")%></p>
+		<p class="error"><%=request.getParameter("errorMessage")%></p>
 	</div>
 	<%
 	}
-	else if(request.getParameter("addManagerSuccessMessage") != null){
+	else if(request.getParameter("successMessage") != null){
 	%>
 	<div id="messageBox">
-		<p class="success"><%=request.getParameter("addManagerSuccessMessage")%></p>
+		<p class="success"><%=request.getParameter("successMessage")%></p>
 	</div>
 	<%
 	}
@@ -33,7 +33,7 @@
 		<div class="card w-50">
 			<div class="card-header text-center">Add Manager</div>
 			<div class="card-body">
-				<form action="../AddManagerServlet" method="post">
+				<form action="../user/addmanager" method="post">
 					<div class="form-group">
 						<label>Enter Name : </label> <input type="text" name="name"
 							class="form-control" required>
@@ -43,8 +43,8 @@
 							placeholder="example@gmail.com" class="form-control" required>
 					</div>
 					<div class="form-group">
-						<label>Enter Password : </label> <input type="password"
-							name="password" class="form-control" required>
+						<label>Enter Password : </label> <input type="password" pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+							title="Password must contain at least 4 characters including 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character." name="password" class="form-control" required>
 					</div>
 					<div class="form-group">
 						<label>Enter Phone Number : </label> <input pattern="[0-9]{10}"

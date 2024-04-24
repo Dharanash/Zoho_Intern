@@ -12,47 +12,47 @@ User user=(User) session.getAttribute("auth");
 			<ul class="navbar-nav ml-auto">
 				
 				<li class="nav-item"><a class="nav-link"
-					href="../user/index.jsp">Home</a></li>
+					href="../user/home">Home</a></li>
 				<%
 				if (user.role == Role.Admin) {
 				%>
 				
 				<li class="nav-item"><a class="nav-link"
-					href="../InventoryServlet/getInventory">Inventory </a></li>
+					href="../inventory/get">Inventory </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../OrderServlet/getAllOrder">Orders </a></li>
+					href="../orders/getallorders">Orders </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../OrderServlet/getReceivedOrders">Received Orders </a></li>
+					href="../orders/getreceivedorders">Received Orders </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../admin/addManager.jsp">Add Manager </a></li>
+					href="../user/getaddmanager">Add Manager </a></li>
 				<%
 				} else if (user.role == Role.Manager) {
 				%>
 				<li class="nav-item"><a class="nav-link"
-					href="../InventoryServlet/getInventory">Inventory </a></li>
+					href="../inventory/get">Inventory </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../OrderServlet/getReceivedOrders">Received Orders </a></li>
+					href="../orders/getreceivedorders">Received Orders </a></li>
 				<%
 				} else if (user.role == Role.Customer) {
 				%>
 				<li class="nav-item"><a class="nav-link"
-					href="../InventoryServlet/getInventory">View Products </a></li>
+					href="../inventory/get">View Products </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../CartServlet/getCart">Cart </a></li>
+					href="../cart/get">Cart </a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../OrderServlet/getUserOrder">Purchase History</a></li>
+					href="../orders/getuserorder">Purchase History</a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../WalletServlet/getWallet">Wallet</a></li>
+					href="../wallet/get">Wallet</a></li>
 				<li class="nav-item"><a class="nav-link"
-					href="../OrderServlet/getDeliveryDetails">Delivery Details</a></li>
+					href="../orders/getdeliverydetails">Delivery Details</a></li>
 				<%
 				}
 				%>
 				<li class="nav-item ml-5 mr-3"><a
-					class="nav-link btn btn-success" href="../user/profile.jsp">Profile</a>
+					class="nav-link btn btn-success" href="../user/getprofile">Profile</a>
 				</li>
 				<li class="nav-item"><a class="nav-link btn btn-danger"
-					href="../UserServlet/logout">Logout</a></li>
+					href="../user/logout">Logout</a></li>
 			</ul>
 
 		</div>

@@ -6,27 +6,26 @@ public class Cart extends Product {
 	public int productQuantity;
 	public Timestamp addedTime;
 	
-	
-	public Cart(int productId, String name, String description, double price, String productStatus, int productStatusId) {
-		super(productId, name, description, price, productStatus, productStatusId);
+	public Cart(int productId, String name, String description, double price,int quantity, String productStatus, int productStatusId) {
+		super(productId, name, description, price,quantity, productStatus, productStatusId);
 		this.productQuantity= 1;
 		this.addedTime = new Timestamp(System.currentTimeMillis());
 	}
 	
-	public Cart(int productId, String name, String description, double price, String productStatus,int productStatusId, int productQuantity) {
-		super(productId, name, description, price, productStatus, productStatusId);
+	public Cart(int productId, String name, String description, double price,int quantity, String productStatus,int productStatusId, int productQuantity) {
+		super(productId, name, description, price,quantity, productStatus, productStatusId);
 		this.productQuantity= productQuantity;
 		this.addedTime = new Timestamp(System.currentTimeMillis());
 	}
 	
-	public Cart(int productId, String name, String description, double price, String productStatus,int productStatusId, int productQuantity, Timestamp timestamp) {
-		super(productId, name, description, price, productStatus, productStatusId);
+	public Cart(int productId, String name, String description, double price,int quantity, String productStatus,int productStatusId, int productQuantity, Timestamp timestamp) {
+		super(productId, name, description, price,quantity, productStatus, productStatusId);
 		this.productQuantity= productQuantity;
 		this.addedTime = timestamp;
 	}
 	
-	public Cart(int productId, String name, String description, double price,int productQuantity, Timestamp timestamp) {
-		super(productId, name, description, price);
+	public Cart(int productId, String name, String description, double price,int quantity,int productQuantity, Timestamp timestamp) {
+		super(productId, name, description, price,quantity);
 		this.productQuantity= productQuantity;
 		this.addedTime = timestamp;
 	}

@@ -23,6 +23,10 @@ public class MappingService {
 
 		return user;
 	}
+	
+	public static DetailedProduct mapToProduct(ResultSet result, Role role)throws SQLException {
+		return mapToProductList(result,Role.Customer).get(0);
+	}
 
 	public static ArrayList<DetailedProduct> mapToProductList(ResultSet result, Role role) throws SQLException {
 		ArrayList<DetailedProduct> products = new ArrayList<>();
@@ -31,17 +35,20 @@ public class MappingService {
 			String name = result.getString("productname");
 			String description = result.getString("description");
 			double price = result.getDouble("price");
+			int quantity = result.getInt("quantity");
 			int productStatusId = result.getInt("productstatusid");
 			String productStatus = result.getString("productStatus");
 			if (role == Role.Customer) {
-				products.add(new DetailedProduct(productId, name, description, price, productStatus, productStatusId));
+				products.add(new DetailedProduct(productId, name, description, price,quantity, productStatus, productStatusId));
 				continue;
 			}
+			int createdbyId=result.getInt("createdby");
+			int modifiedbyId=result.getInt("modifiedby");
 			String createdby = result.getString("createdByEmail");
 			String modifiedby = result.getString("modifiedByEmail");
 			Timestamp createdTime = result.getTimestamp("createdtime");
 			Timestamp modifiedTime = result.getTimestamp("modifiedtime");
-			products.add(new DetailedProduct(productId, name, description, price, createdby, modifiedby, createdTime,
+			products.add(new DetailedProduct(productId, name, description, price,quantity,createdbyId, createdby,modifiedbyId, modifiedby, createdTime,
 					modifiedTime, productStatus, productStatusId));
 		}
 
@@ -56,12 +63,13 @@ public class MappingService {
 			String name = result.getString("productname");
 			String description = result.getString("description");
 			double price = result.getDouble("price");
+			int quantity = result.getInt("quantity");
 			int productStatusId = result.getInt("productstatusid");
 			String productStatus = result.getString("status");
-			int quantity = result.getInt("productquantity");
+			int pquantity = result.getInt("productquantity");
 			Timestamp addeddate = result.getTimestamp("addeddate");
 			cart.add(
-					new Cart(productId, name, description, price, productStatus, productStatusId, quantity, addeddate));
+					new Cart(productId, name, description, price,quantity, productStatus, productStatusId,pquantity, addeddate));
 
 		}
 
@@ -105,6 +113,10 @@ public class MappingService {
 		return deliveryDetails;
 	}
 	
+	public static Order mapToOrder(ResultSet result)throws SQLException {
+		return mapToOrders(result).get(0);
+	}
+	
 	public static ArrayList<Order> mapToOrders(ResultSet result) throws SQLException {
 		ArrayList<Order> order = new ArrayList<>();
 		while (result.next()) {
@@ -116,11 +128,13 @@ public class MappingService {
 			int pincode = result.getInt("pincode");
 			int orderId = result.getInt("orderid");
 			int orderStatusId = result.getInt("orderstatusid");
+			String orderStatus= result.getString("status");
 			int quantity = result.getInt("quantity");
+			int pquantity = result.getInt("productquantity");
 			Double price = result.getDouble("productprice");
 			Timestamp addedTime= result.getTimestamp("addtime");
 			int userId = result.getInt("userid");
-			order.add(new Order(productId, name, description,price,quantity,addedTime,orderId, orderStatusId, address, pincode, userName, userId));
+			order.add(new Order(productId, name, description,price,quantity,pquantity,addedTime,orderId, orderStatusId,orderStatus, address, pincode, userName, userId));
 		}
 
 		return order;

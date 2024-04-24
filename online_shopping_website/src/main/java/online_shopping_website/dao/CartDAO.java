@@ -24,7 +24,7 @@ public class CartDAO {
 	}
 	
 	public ArrayList<Cart> getCartElements(int userId) throws ClassNotFoundException, SQLException {
-		String query = "SELECT c.*, i.productname, i.description, i.productstatusid, i.price, p.status FROM cart as c inner join inventory as i on i.productid=c.productid and c.userid=? "
+		String query = "SELECT c.*, i.*, p.status FROM cart as c inner join inventory as i on i.productid=c.productid and c.userid=? "
 			+	"inner join productstatus p on p.id=i.productstatusid";
 		try(Connection conn = DatabaseConnectionDAO.getConnection();
 		PreparedStatement st = conn.prepareStatement(query)){
@@ -47,10 +47,24 @@ public class CartDAO {
 		try (Connection conn = DatabaseConnectionDAO.getConnection();
 				PreparedStatement st = conn
 						.prepareStatement("UPDATE cart SET productquantity = ? WHERE userid = ? AND productid = ?")) {
-			st.setInt(1, nquantity);
+			st.setInt(1,Math.abs(nquantity));
 			st.setInt(2, userId);
 			st.setInt(3, productId);
 			st.executeUpdate();
+		}
+	}
+	
+	public boolean isProductExistInCart(int productId, int userId) throws ClassNotFoundException, SQLException {
+		String query = "SELECT * FROM cart WHERE productid = ? AND userid= ?";
+		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(query)) {
+
+			st.setInt(1, productId);
+			st.setInt(2, userId);
+			ResultSet rs = st.executeQuery();
+			if (rs.next()) {
+				return true;
+			}
+			return false;
 		}
 	}
 

@@ -41,7 +41,7 @@ public class UserDAO {
 	}
 	
 	public boolean isUserExist(String email) throws SQLException, ClassNotFoundException {
-		String sql = "SELECT * FROM users WHERE email = ?";
+		String sql = "SELECT * FROM users WHERE LOWER(email) = LOWER(?)";
 		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
 			st.setString(1, email);
 			ResultSet rs = st.executeQuery();

@@ -5,17 +5,17 @@
 <head>
 <meta charset="ISO-8859-1">
 <link rel="stylesheet" type="text/css" href="../CSS/userpage-style.css">
-<%@include file="../Includes/head.jsp"%>
+<%@include file="../../Includes/head.jsp"%>
 <title>Add Delivery Detail</title>
 </head>
 <body>
-<%@include file="../Includes/navbar.jsp"%>
-	<div
-			class="container d-flex justify-content-center align-items-center h-100">
+
+<%@include file="../../Includes/navbar.jsp"%>
+	<div class="container d-flex justify-content-center align-items-center h-100">
 			<div class="card w-50">
 				<div class="card-header text-center">Add Delivery Detail</div>
 				<div class="card-body">
-					<form action="../OrderServlet/addDeliveryDetails" method="post">
+					<form action="../orders/adddeliverydetail" method="post">
 						<div class="form-group">
 							<label>Enter address</label> <input type="text" name="address"
 								class="form-control" placeholder="Enter your full address" required>

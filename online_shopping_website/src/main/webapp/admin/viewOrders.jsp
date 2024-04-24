@@ -2,20 +2,19 @@
 	pageEncoding="ISO-8859-1"%>
 
 <%
-ArrayList<Order> orders = (ArrayList<Order>) request.getSession().getAttribute("orders");
-HashMap<Integer, String> orderStatus = (HashMap<Integer, String>)request.getSession().getAttribute("orderStatus");
+ArrayList<Order> orders = (ArrayList<Order>) request.getAttribute("orders");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="../CSS/userpage-style.css">
-<%@include file="../Includes/head.jsp"%>
+<link rel="stylesheet" type="text/css" href="../../CSS/userpage-style.css">
+<%@include file="../../Includes/head.jsp"%>
 <meta charset="ISO-8859-1">
 <title>Orders</title>
 </head>
 <body>
-<%@include file="../Includes/navbar.jsp"%>
+<%@include file="../../Includes/navbar.jsp"%>
 	<div class="container my-3">
 		<div class="d-flex py-3"><h3>Order History</h3> </div>
 		<table class="table table-light">
@@ -45,7 +44,7 @@ HashMap<Integer, String> orderStatus = (HashMap<Integer, String>)request.getSess
 					<td><%=r.getProductQuantity()%></td>
 					<td><%=r.getPrice()*r.getProductQuantity() %></td>	
 					<td><%=r.getAddedTime()%></td>
-					<td><%=orderStatus.get(r.getOrderStatusId()) %></td>
+					<td><%=r.getOrderStatus() %></td>
 					<td><%=r.getUserName()%></td>
 					<td><%=r.getDeliveryAddress()+", "+r.getDeliveryPincode()%></td>
 				</tr>
