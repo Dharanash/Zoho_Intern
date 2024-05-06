@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+        "http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+
+	<package name="user" namespace="/user" extends="struts-default, json-default">
+
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+			<interceptor-stack name="authStack">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="authenticationInterceptor" />
+			</interceptor-stack>
+		</interceptors>
+
+		<default-interceptor-ref name="authStack" />
+
+		<action name="login"
+			class="com.expensecalculator.controller.LoginController"
+			method="login">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+
+		<action name="showlogin"
+			class="com.expensecalculator.controller.LoginController"
+			method="showLogin">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">/login.jsp</result>
+		</action>
+
+
+		<action name="register"
+			class="com.expensecalculator.controller.RegisterController">
+			<result name="input">/register.jsp</result>
+			<result name="error">/register.jsp</result>
+			<result name="success" type="redirect">../user/showlogin</result>
+		</action>
+
+		<action name="showregister"
+			class="com.expensecalculator.controller.RegisterController"
+			method="showRegister">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">/register.jsp</result>
+		</action>
+
+	</package>
+
+
+	<package name="home" namespace="/home" extends="struts-default, json-default">
+
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+		</interceptors>
+
+		<action name="showhome"
+			class="com.expensecalculator.controller.HomeController"
+			method="showHome">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../user/index.jsp</result>
+		</action>
+		
+		
+		<action name="getuser"
+			class="com.expensecalculator.controller.HomeController"
+			method="getUser">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+
+		<action name="logout"
+			class="com.expensecalculator.controller.HomeController"
+			method="logout">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success" type="redirect">../user/showlogin</result>
+		</action>
+
+	</package>
+
+	<package name="transaction" namespace="/transaction" extends="struts-default,json-default">
+
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+		</interceptors>
+
+		<action name="get"
+			class="com.expensecalculator.controller.TransactionController"
+			method="getTransactions">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="getfiltered"
+			class="com.expensecalculator.controller.TransactionController"
+			method="getFilteredTransactions">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="getcategory"
+			class="com.expensecalculator.controller.TransactionController"
+			method="getTransactionCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="add"
+			class="com.expensecalculator.controller.TransactionController"
+			method="addTransaction">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="update"
+			class="com.expensecalculator.controller.TransactionController"
+			method="updateTransaction">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="remove"
+			class="com.expensecalculator.controller.TransactionController"
+			method="removeTransaction">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+
+
+	</package>
+	
+	<package name="guser" namespace="/guser" extends="struts-default,json-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+		</interceptors>
+		
+		<action name="showexpense"
+			class="com.expensecalculator.controller.HomeController"
+			method="showExpense">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../guser/expense.jsp</result>
+		</action>
+		
+		<action name="showincome"
+			class="com.expensecalculator.controller.HomeController"
+			method="showIncome">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../guser/income.jsp</result>
+		</action>
+		
+		<action name="showanalysis"
+			class="com.expensecalculator.controller.HomeController"
+			method="showAnalysis">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../guser/analysis.jsp</result>
+		</action>
+		
+	</package>
+	
+	<package name="category" namespace="/category" extends="struts-default,json-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+		</interceptors>
+		
+		<action name="show"
+			class="com.expensecalculator.controller.CategoryController"
+			method="showCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../admin/category.jsp</result>
+		</action>
+		
+		<action name="get"
+			class="com.expensecalculator.controller.CategoryController"
+			method="getCategories">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="add"
+			class="com.expensecalculator.controller.CategoryController"
+			method="addCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="update"
+			class="com.expensecalculator.controller.CategoryController"
+			method="updateCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		
+	</package>
+	
+	
+	
+</struts>
