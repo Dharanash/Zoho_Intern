@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.apache.struts2.json.annotations.JSON;
 
+import com.expensecalculator.dto.AutoAdderTransaction;
 import com.expensecalculator.dto.Category;
 import com.expensecalculator.dto.Transaction;
 import com.expensecalculator.dto.User;
@@ -46,15 +47,44 @@ public class MappingService {
 			int typeId = result.getInt("transaction_type_id");
 			String category = result.getString("category");
 			Timestamp datetime = result.getTimestamp("datetime");
-			Date date = new Date(datetime.getTime());
-
-			String formattedDate = dateFormat.format(date);
-			String formattedTime = timeFormat.format(date);
+			int autoAdderStatusId = result.getInt("auto_adder_status_id");
 			transactions.add(
-					new Transaction(transactionId, userId, amount , note, formattedDate, formattedTime, categoryId,typeId, category));
+					new Transaction(transactionId, userId, amount , note, datetime.toString(), categoryId,typeId, category, autoAdderStatusId));
 		}
 		
 		return transactions;
+	}
+	
+	public static ArrayList<AutoAdderTransaction> mapToAutoAdderTransactionList(ResultSet result) throws SQLException {
+		ArrayList<AutoAdderTransaction> transactions = new ArrayList<>();
+		while (result.next()) {
+			int transactionId = result.getInt("transactionid");
+			int userId = result.getInt("userid");
+			String note = result.getString("note");
+			double amount = result.getDouble("amount");
+			int categoryId = result.getInt("categoryid");
+			int typeId = result.getInt("transaction_type_id");
+			Timestamp datetime = result.getTimestamp("datetime");
+			int autoAdderStatusId = result.getInt("auto_adder_status_id");
+			Timestamp ndatetime = result.getTimestamp("next_add_date");
+			transactions.add(
+					new AutoAdderTransaction(transactionId, userId, amount , note, datetime.toString(), categoryId,typeId, autoAdderStatusId, ndatetime));
+		}
+		
+		return transactions;
+	}
+	
+	public static String mapToGroupCategoryJson(ResultSet result) throws SQLException {
+		JsonArray jsonArray = new JsonArray();
+		while (result.next()) {
+			JsonObject jsonObject = new JsonObject();
+			jsonObject.addProperty("typeId", result.getInt("transaction_type_id"));
+			jsonObject.addProperty("category", result.getString("category"));
+			jsonObject.addProperty("amount", result.getInt("total_amount"));
+			jsonArray.add(jsonObject);
+		}
+		
+		return jsonArray.toString();
 	}
 	
 	public static ArrayList<Category> mapToCategoryList(ResultSet result) throws SQLException {

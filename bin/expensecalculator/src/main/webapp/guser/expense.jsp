@@ -38,8 +38,10 @@
           <select name="categoryId" class="form-control" id="updateCategorySelect" required></select>
 
           <label>Date:</label>
-          <input type="datetime-local" class="form-control" name="datetime"  id="datetimeInput" required>
+          <input type="date" class="form-control" name="date"  id="dateInput" required>
 
+          <label>Time:</label>
+          <input type="time" class="form-control" name="time" id="timeInput" required>
         </form>
       </div>
       <div class="modal-footer">
@@ -57,8 +59,6 @@
 					<th scope="col">Expense Amount</th>
 					<th scope="col">Note</th>
 					<th scope="col">Category</th>
-					<th scope="col">DateTime</th>
-					<th scope="col">Monthly Repeater</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -70,8 +70,6 @@
 						<td><select name="categoryId" id="addCategorySelect" class="form-control" required></select>
 						<input type="text" class="form-control" name="category" id="addCategoryInput" placeholder="Custom Category" >
 						</td>
-						<td><input type="datetime-local" class="form-control" name="datetime" id="datetimeInputAdd" required></td>
-						<td><input type="checkbox" name="autoAdder" class="form-control" ></td>
 						<td>
 							<button type="submit" class="btn btn-sm btn-success">Add</button>
 						</td>
@@ -87,11 +85,11 @@
 		<table class="table table-striped">
 			<thead>
 				<tr>
-					<th scope="col">Monthly Repeater</th>
 					<th scope="col">Amount</th>
 					<th scope="col">Note</th>
 					<th scope="col">Category</th>
-					<th scope="col">DateTime</th>
+					<th scope="col">Date</th>
+					<th scope="col">Time</th>
 					<th scope="col">Update</th>
 					<th scope="col">Remove</th>
 				</tr>
@@ -102,9 +100,6 @@
 
 	<script>
 	var transactionTypeId = 1;
-	var checked=1;
-	var unchecked=2;
-	var repeated=3;
 	var userId = sessionStorage.getItem('userId');
 	window.addEventListener('load', populateCategories);
 
@@ -140,8 +135,6 @@
 	                	selectTag.style.display = 'none';
 	                    customInputTag.style.display = 'block';
 	                }
-	                let date=new Date().toISOString().slice(0, 16);
-	                document.getElementById('datetimeInputAdd').value =date 
 	            });
 	        })
 	        .catch(error => console.error('Error fetching categories:', error));
@@ -150,7 +143,8 @@
 	function validateForm(form) {
 	    const amount = form.querySelector('input[name="amount"]').value;
 	    const note = form.querySelector('input[name="note"]').value;
-	    const datetime = form.querySelector('input[name="datetime"]').value;
+	    let date = form.querySelector('input[name="date"]');
+	    let time = form.querySelector('input[name="time"]');
 	    const category=form.querySelector('select[name="categoryId"]').value;
 	    
 	    if(category==0 && !form.querySelector('input[name="category"]').value){
@@ -177,10 +171,14 @@
 	    	return false;
 	    }
 	    
-	    if(!datetime){
-	    	alert('Date and Time cannot be empty.');
+	    if(date!=null && time!=null && (!date.value || !time.value )){
+	    	alert('Date or Time cannot be empty.');
 	    	return false;
 	    }
+	    
+	    
+	    
+
 	    return true;
 	}
 
@@ -238,13 +236,13 @@
 	    const userId = row.querySelector('input[name="userId"]').value;
 	    const amount = row.querySelector('input[name="amount"]').value;
 	    const note = row.querySelector('input[name="note"]').value;
-	    const datetime = row.querySelector('input[name="datetime"]').value;
+	    const time = row.querySelector('input[name="time"]').value;
 
 	    document.getElementById('expenseIdInput').value = transactionId;
 	    document.getElementById('userIdInput').value = userId;
 	    document.getElementById('amountInput').value = amount;
 	    document.getElementById('noteInput').value = note;
-	    document.getElementById('datetimeInput').value = datetime.slice(0, 16).replace('T', ' ');
+	    document.getElementById('timeInput').value = time;
 	    	
 	    try {
 	        let url = "../transaction/getcategory?userId="+userId+"&transactionTypeId="+transactionTypeId;
@@ -345,71 +343,21 @@
 	                row.innerHTML =
 	                    "<input type='hidden' name='userId' value='" + expense.userId + "'>" +
 	                    "<input type='hidden' name='categoryId' value='" + expense.categoryId + "'>" +
-	                    "<td><input type='checkbox' name='autoAdder' onclick='monthlyRepeaterClick(" + expense.transactionId + ")'></td>" +
 	                    "<td><input name='amount' value='" + expense.amount + "' readonly></td>" +
 	                    "<td><input name='note' value='" + expense.note + "' readonly></td>" +
 	                    "<td><input name='category' value='" + expense.category + "' readonly></td>" +
-	                    "<td><input name='datetime' value='" + expense.datetime + "' readonly></td>"+
+	                    "<td>"+expense.date+"</td>"+
+	                    "<td><input name='time' value='" + expense.time + "' readonly></td>" +
 	                    "<td>" +
 	                    "<button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + expense.transactionId + ")'>Update</button>" +
 	                    "</td>" +
 	                    "<td><button class='btn btn-sm btn-danger' onclick='removeExpense(" + expense.transactionId + ")'>Remove</button></td>";
 
-	                    const checkbox = row.querySelector("input[name='autoAdder']");
-	                    if (expense.autoAdderStatus=="1") {
-	                        checkbox.checked = true;
-	                    } else if (expense.autoAdderStatus == "2") {
-	                        checkbox.checked = false;
-	                    } else if (expense.autoAdderStatus == "3") {
-	                        checkbox.disabled = true;
-	                    }
-	                    
-	                    expenseTableBody.appendChild(row);
+	                expenseTableBody.appendChild(row);
 	            });
 	            document.getElementById('totalExpense').innerText = "Total Expense: " + totalExpense.toFixed(2);
 	        })
 	        .catch(error => console.error('Error fetching expense data:', error));
-	}
-	
-	function monthlyRepeaterClick(transactionId) {
-		
-		const row = document.getElementById('expenseRow_' + transactionId);
-	    const datetime = row.querySelector('input[name="datetime"]').value;
-	    const checkbox = row.querySelector('input[name="autoAdder"]');
-	    
-	    if (checkbox.checked) {
-	    	console.log("Expense selected:", checkbox.value);
-	        fetch("../transaction/addrepeater?transactionId="+transactionId+"&datetime="+datetime)
-		    .then(response => {
-		        if (response.ok) {
-		            alert('Monthly repeater added successfully');
-		        }
-		        else{
-		        	throw new Error('Failed to add repeater');
-		        }
-		        
-		    })
-		    .catch(error => {
-		        console.error('Error adding repeater:', error);
-		        alert('Failed to add repeater. Please try again.');
-		    });
-	    } else {
-	        console.log("Expense deselected:", checkbox.value);
-	        fetch("../transaction/removerepeater?transactionId="+transactionId+"&datetime="+datetime)
-		    .then(response => {
-		        if (response.ok) {
-		            alert('Monthly repeater removed successfully');
-		        }
-		        else{
-		        	throw new Error('Failed to remove repeater');
-		        }
-		        
-		    })
-		    .catch(error => {
-		        console.error('Error removing repeater:', error);
-		        alert('Failed to remove repeater. Please try again.');
-		    });
-	    }
 	}
 
 	window.addEventListener('load', populateExpenseTable);

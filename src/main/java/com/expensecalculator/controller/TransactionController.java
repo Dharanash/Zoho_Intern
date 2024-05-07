@@ -1,9 +1,12 @@
 package com.expensecalculator.controller;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -14,6 +17,7 @@ import org.apache.struts2.ServletActionContext;
 
 import com.expensecalculator.dao.TransactionDao;
 import com.expensecalculator.dao.UserDao;
+import com.expensecalculator.dto.AutoAdderTransaction;
 import com.expensecalculator.dto.Transaction;
 import com.expensecalculator.dto.User;
 import com.expensecalculator.enums.ResponseStatus;
@@ -66,6 +70,19 @@ public class TransactionController extends ActionSupport {
 		System.out.println(json);
 		response.getWriter().write(json);
 	}
+	
+	public void getFilteredTransactionsByMonth() throws Exception {
+
+		HttpServletRequest request = ServletActionContext.getRequest();
+		int userId = Integer.parseInt(request.getParameter("userId"));
+		String json = transactionDao.getFilteredTransactionByMonth(userId);
+		HttpServletResponse response = ServletActionContext.getResponse();
+		response.setContentType("application/json");
+		System.out.println(json);
+		response.getWriter().write(json);
+	}
+	
+	
 
 	public void getTransactionCategory() throws Exception {
 
@@ -91,31 +108,64 @@ public class TransactionController extends ActionSupport {
 			String notes = request.getParameter("note");
 			double amount = Double.parseDouble(request.getParameter("amount"));
 			int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+			String dateTime = InputValidationService.getTimestamp(request.getParameter("datetime")).toString();
+			int autoAdderStatusId = request.getParameter("autoAdder")==null? 2 : 1;
 			if (categoryId==0) {
 				
 				String category = request.getParameter("category");
-				if(transactionDao.isCategoryExist(userId, category, transactionTypeId)) {
+				int customCategoryId=-1;
+				
+				try {
+				customCategoryId = transactionDao.addTransactionCategory(category, userId, transactionTypeId);
+				}
+				catch (Exception e) {
 					response.setStatus(HttpServletResponse.SC_CONFLICT);
 					response.getWriter().write(ResponseStatus.Failure.toString());
+					System.out.println(e);
 					return;
 				}
-				int customCategoryId = transactionDao.addTransactionCategory(category, userId, transactionTypeId);
-				transaction = new Transaction(userId, amount, notes, customCategoryId, transactionTypeId);
+				transaction = new Transaction(userId, amount, notes, dateTime, customCategoryId, transactionTypeId, autoAdderStatusId);
 			} else {
 				if (!transactionDao.isValidCategory(userId, categoryId, transactionTypeId)) {
 					response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 					response.getWriter().write(ResponseStatus.Failure.toString());
 					return;
 				}
-				transaction = new Transaction(userId, amount, notes, categoryId, transactionTypeId);
+				transaction = new Transaction(userId, amount, notes,dateTime, categoryId, transactionTypeId, autoAdderStatusId);
 			}
-
-			transactionDao.addTransaction(transaction);
+			int transactionId= transactionDao.addTransaction(transaction);
+			
+			if(autoAdderStatusId==1) {
+				Timestamp dataTimestamp= new Timestamp(InputValidationService.getNextMonthTimestamp(dateTime, dateTime));
+				transactionDao.addRepeater(transactionId, dataTimestamp);
+			}
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().write(ResponseStatus.Error.toString());
 			throw e;
 		}
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().write(ResponseStatus.Success.toString());
+	}
+	
+	public void addRepeater() throws Exception {
+
+		HttpServletRequest request = ServletActionContext.getRequest();
+		HttpServletResponse response = ServletActionContext.getResponse();
+		int transactionId = Integer.parseInt(request.getParameter("transactionId"));
+		String dateTime = request.getParameter("datetime");
+		Timestamp dateTimestamp =new Timestamp(InputValidationService.getNextMonthTimestamp(dateTime, dateTime));
+		transactionDao.addRepeater(transactionId, dateTimestamp);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().write(ResponseStatus.Success.toString());
+	}
+	
+	public void removeRepeater() throws Exception {
+
+		HttpServletRequest request = ServletActionContext.getRequest();
+		HttpServletResponse response = ServletActionContext.getResponse();
+		int transactionId = Integer.parseInt(request.getParameter("transactionId"));
+		transactionDao.removeRepeater(transactionId);
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().write(ResponseStatus.Success.toString());
 	}
@@ -128,10 +178,9 @@ public class TransactionController extends ActionSupport {
 		int userId = Integer.parseInt(request.getParameter("userId"));
 		String notes = request.getParameter("note");
 		double amount = Double.parseDouble(request.getParameter("amount"));
-		String time = request.getParameter("time");
+		String datetime = request.getParameter("datetime");
 		int categoryId = Integer.parseInt(request.getParameter("categoryId"));
-		String date = request.getParameter("date");
-		Transaction transaction = new Transaction(transactionId, userId, amount, notes,date, time, categoryId,
+		Transaction transaction = new Transaction(transactionId, userId, amount, notes,datetime, categoryId,
 				transactionTypeId);
 		if(!transactionDao.updateTransaction(transaction)) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -167,5 +216,52 @@ public class TransactionController extends ActionSupport {
 		}
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().write(ResponseStatus.Success.toString());
+	}
+	
+	
+	public void addAutoAdderTransactions() throws ClassNotFoundException, SQLException, ParseException, IOException {
+		HttpServletRequest request = ServletActionContext.getRequest();
+		HttpServletResponse response = ServletActionContext.getResponse();
+		int userId = Integer.parseInt(request.getParameter("userId"));
+		
+		int expenseCount = 0;
+	    int incomeCount = 0;
+	    
+	    ArrayList<AutoAdderTransaction> transactions = transactionDao.getAutoAdderFromUserId(userId);
+	    for (AutoAdderTransaction transaction : transactions) {
+	        transaction.datetime = transaction.nextAddDateTimestamp.toString();
+	        transaction.nextAddDateTimestamp = new Timestamp(InputValidationService.getNextMonthTimestamp(
+	        		transaction.datetime, transaction.nextAddDateTimestamp.toString()));
+	        transaction.autoAdderStatus = 3;
+	        transactionDao.addTransaction(transaction);
+	        
+	        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+	        while (transaction.nextAddDateTimestamp.before(currentTimestamp)) {
+	        	transaction.datetime = transaction.nextAddDateTimestamp.toString();
+	            transaction.nextAddDateTimestamp = new Timestamp(InputValidationService.getNextMonthTimestamp(
+		        		transaction.datetime, transaction.nextAddDateTimestamp.toString()));
+	            transactionDao.addTransaction(transaction);
+	            
+	            if (transaction.typeId == 1) {
+	                expenseCount++;
+	            } else if (transaction.typeId == 2) {
+	                incomeCount++;
+	            }
+	        }
+	        
+	        if (transaction.typeId == 1) {
+                expenseCount++;
+            } else if (transaction.typeId == 2) {
+                incomeCount++;
+            }
+	        transactionDao.updateRepeater(transaction.transactionId, transaction.nextAddDateTimestamp);
+	    }
+	    
+	    JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("expenseCount", expenseCount);
+        jsonObject.addProperty("incomeCount", incomeCount);
+       
+       response.setContentType("application/json");
+       response.getWriter().write(jsonObject.toString());
 	}
 }

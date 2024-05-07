@@ -106,7 +106,7 @@ public class AuthenticationInterceptor implements Interceptor{
 	
 	private boolean hasAccess(int userRoleId, String requestURI) {
 		if (userRoleId == 1) {
-			return requestURI.contains("/category") || 	requestURI.contains("/home");
+			return requestURI.contains("/category") || 	requestURI.contains("/home") || requestURI.contains("/transaction")	;
 		} else if (userRoleId == 2) {
 			return requestURI.contains("/home") || requestURI.contains("/guser") || requestURI.contains("/transaction")	;
 		}

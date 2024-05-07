@@ -101,13 +101,6 @@
 			<result type="json"/>
 		</action>
 		
-		<action name="getbymonth"
-			class="com.expensecalculator.controller.TransactionController"
-			method="getFilteredTransactionsByMonth">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
 		<action name="getcategory"
 			class="com.expensecalculator.controller.TransactionController"
 			method="getTransactionCategory">
@@ -118,27 +111,6 @@
 		<action name="add"
 			class="com.expensecalculator.controller.TransactionController"
 			method="addTransaction">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
-		<action name="addmonthlyrepeater"
-			class="com.expensecalculator.controller.TransactionController"
-			method="addAutoAdderTransactions">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
-		<action name="addrepeater"
-			class="com.expensecalculator.controller.TransactionController"
-			method="addRepeater">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
-		<action name="removerepeater"
-			class="com.expensecalculator.controller.TransactionController"
-			method="removeRepeater">
 			<interceptor-ref name="authenticationInterceptor" />
 			<result type="json"/>
 		</action>

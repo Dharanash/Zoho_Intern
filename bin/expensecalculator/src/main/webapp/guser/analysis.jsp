@@ -58,7 +58,8 @@
 							<th scope="col">Expense</th>
 							<th scope="col">Note</th>
 							<th scope="col">Category</th>
-							<th scope="col">Date Time</th>
+							<th scope="col">Date</th>
+							<th scope="col">Time</th>
 						</tr>
 					</thead>
 					<tbody id="expenseTableBody"></tbody>
@@ -83,7 +84,8 @@
 							<th scope="col">Income</th>
 							<th scope="col">Note</th>
 							<th scope="col">Category</th>
-							<th scope="col">Date Time</th>
+							<th scope="col">Date</th>
+							<th scope="col">Time</th>
 						</tr>
 					</thead>
 					<tbody id="incomeTableBody"></tbody>
@@ -139,7 +141,8 @@
 	            "<td>" + transaction.amount + "</td>" +
 	            "<td>" + transaction.note + "</td>" +
 	            "<td>" + transaction.category + "</td>" +
-	            "<td>" + transaction.datetime + "</td>" ;
+	            "<td>" + transaction.date + "</td>" +
+	            "<td>" + transaction.time + "</td>";
 
 	        if (transaction.typeId === expenseTypeId) {
 	            expenseTableBody.appendChild(row);
@@ -213,7 +216,8 @@
 	                    "<td>" + transcation.amount + "</td>" +
 	                    "<td>" + transcation.note + "</td>" +
 	                    "<td>" + transcation.category + "</td>" +
-	                    "<td>"+transcation.datetime+"</td>";
+	                    "<td>"+transcation.date+"</td>"+
+	                    "<td>" + transcation.time + "</td>";
 
 	                    tableBody.appendChild(row);
 	            });
