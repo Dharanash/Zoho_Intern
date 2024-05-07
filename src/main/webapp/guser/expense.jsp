@@ -141,7 +141,7 @@
 	                    customInputTag.style.display = 'block';
 	                }
 	                let date=new Date().toISOString().slice(0, 16);
-	                document.getElementById('datetimeInputAdd').value =date 
+	                document.getElementById('datetimeInputAdd').value =currentDateISO 
 	            });
 	        })
 	        .catch(error => console.error('Error fetching categories:', error));

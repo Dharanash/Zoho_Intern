@@ -41,18 +41,14 @@ public class CategoryController extends ActionSupport {
 		int userId = Integer.parseInt(request.getParameter("userId"));
 		int transactionTypeId = Integer.parseInt(request.getParameter("type"));
 		String category = request.getParameter("category");
-		if(categoryDao.isCategoryExist(userId, category, transactionTypeId)) {
-			response.setStatus(HttpServletResponse.SC_CONFLICT);
-			response.getWriter().write(ResponseStatus.Failure.toString());
-			return;
-		}
 		categoryDao.addCategory(category, userId, transactionTypeId);
 			
 		}
 		catch (Exception e) {
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			response.getWriter().write(ResponseStatus.Error.toString());
-			throw e;
+			response.setStatus(HttpServletResponse.SC_CONFLICT);
+			response.getWriter().write(ResponseStatus.Failure.toString());
+			System.out.println(e);
+			return;
 		}
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().write(ResponseStatus.Success.toString());

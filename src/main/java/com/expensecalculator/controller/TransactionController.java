@@ -152,10 +152,12 @@ public class TransactionController extends ActionSupport {
 
 		HttpServletRequest request = ServletActionContext.getRequest();
 		HttpServletResponse response = ServletActionContext.getResponse();
+		
 		int transactionId = Integer.parseInt(request.getParameter("transactionId"));
 		String dateTime = request.getParameter("datetime");
 		Timestamp dateTimestamp =new Timestamp(InputValidationService.getNextMonthTimestamp(dateTime, dateTime));
 		transactionDao.addRepeater(transactionId, dateTimestamp);
+		
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().write(ResponseStatus.Success.toString());
 	}
@@ -164,6 +166,7 @@ public class TransactionController extends ActionSupport {
 
 		HttpServletRequest request = ServletActionContext.getRequest();
 		HttpServletResponse response = ServletActionContext.getResponse();
+		
 		int transactionId = Integer.parseInt(request.getParameter("transactionId"));
 		transactionDao.removeRepeater(transactionId);
 		response.setStatus(HttpServletResponse.SC_OK);
@@ -173,6 +176,7 @@ public class TransactionController extends ActionSupport {
 	public void updateTransaction() throws Exception {
 		HttpServletRequest request = ServletActionContext.getRequest();
 		HttpServletResponse response = ServletActionContext.getResponse();
+		
 		int transactionId = Integer.parseInt(request.getParameter("transactionId"));
 		int transactionTypeId = Integer.parseInt(request.getParameter("transactionTypeId"));
 		int userId = Integer.parseInt(request.getParameter("userId"));
