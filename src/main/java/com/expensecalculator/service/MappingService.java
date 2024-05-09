@@ -23,8 +23,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class MappingService {
-	private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 	public static User mapToUser(ResultSet result) throws SQLException {
 		User user = null;
 		int userid = result.getInt("userid");
@@ -33,6 +31,17 @@ public class MappingService {
 		user = new User(userid, name, roleId);
 
 		return user;
+	}
+	
+	public static ArrayList<User> mapToUsers(ResultSet result) throws SQLException {
+		ArrayList<User> users= new ArrayList<User>();
+		while (result.next()) {
+		String name = result.getString("name");
+		String email = result.getString("email");
+		String phoneNumber = result.getString("phonenumber");
+		users.add(new User(name, email, phoneNumber));
+		}
+		return users;
 	}
 	
 	public static Transaction mapToTransaction(ResultSet result) throws SQLException {

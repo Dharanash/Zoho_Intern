@@ -16,6 +16,12 @@ public class User {
         this.roleId = roleId;
 	}
 	
+	public User(String name, String email, String phoneNumber) {
+		this.name = name;
+        this.email = email;
+        this.phoneNumber =phoneNumber;
+	}
+	
 	public User(String name, String password, String email, String phoneNumber) {
 		this.userId = -1;
 		this.name = name;

@@ -129,7 +129,7 @@
 			}
 			
 			function addAutoRepeater() {
-				        fetch("../transaction/addmonthlyrepeater?userId=" + userId)
+				        fetch("../transaction/executeautoadder?userId=" + userId)
 				            .then(response => response.json())
 				            .then(data => {
 				                if (data.expenseCount > 0) {

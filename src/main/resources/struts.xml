@@ -128,9 +128,9 @@
 			<result type="json"/>
 		</action>
 		
-		<action name="addmonthlyrepeater"
+		<action name="executeautoadder"
 			class="com.expensecalculator.controller.TransactionController"
-			method="addAutoAdderTransactions">
+			method="executeAutoAdderTransactions">
 			<interceptor-ref name="authenticationInterceptor" />
 			<result type="json"/>
 		</action>
@@ -199,6 +199,20 @@
 			method="showUserHome">
 			<interceptor-ref name="authenticationInterceptor" />
 			<result name="success">../admin/index.jsp</result>
+		</action>
+		
+		<action name="showusers"
+			class="com.expensecalculator.controller.HomeController"
+			method="showUsers">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../admin/viewUsers.jsp</result>
+		</action>
+		
+		<action name="getusers"
+			class="com.expensecalculator.controller.HomeController"
+			method="getUsers">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
 		</action>
 		
 		<action name="showcategory"

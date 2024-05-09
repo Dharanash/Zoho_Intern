@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import com.expensecalculator.dto.User;
 import com.expensecalculator.service.EncryptionService;
@@ -21,6 +22,15 @@ public class UserDao {
 				user = MappingService.mapToUser(rs);
 			}
 			return user;
+		}
+
+	}
+	
+	public ArrayList<User> getUsers() throws ClassNotFoundException, SQLException {
+		String sql = "SELECT * FROM users WHERE roleid=2";
+		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
+			ResultSet rs = st.executeQuery();
+			return MappingService.mapToUsers(rs);
 		}
 
 	}

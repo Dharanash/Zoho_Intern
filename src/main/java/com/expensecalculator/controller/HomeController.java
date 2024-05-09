@@ -1,6 +1,7 @@
 package com.expensecalculator.controller;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -9,11 +10,16 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.struts2.ServletActionContext;
 
+import com.expensecalculator.dao.UserDao;
 import com.expensecalculator.dto.User;
 import com.expensecalculator.service.MappingService;
 import com.opensymphony.xwork2.ActionSupport;
 
 public class HomeController extends ActionSupport {
+	private UserDao userDao;
+	public HomeController() {
+		userDao=new UserDao();
+	}
 	public String showUserHome() throws Exception {
 		return SUCCESS;
 	}
@@ -50,12 +56,17 @@ public class HomeController extends ActionSupport {
 	public String showIncome() {
 		return SUCCESS;
 	}
-
-	public void getUser() throws IOException {
+	
+	public String showUsers() {
+		return SUCCESS;
+	}
+	
+	public void getUsers() throws IOException, ClassNotFoundException, SQLException {
 		
-		String json = MappingService.mapToJson(ServletActionContext.getRequest().getSession().getAttribute("auth"));
+		String json = MappingService.mapToJson(userDao.getUsers());
 		HttpServletResponse response = ServletActionContext.getResponse();
 		response.getWriter().write(json);
-		System.out.println(json);
 	}
+	
+	
 }

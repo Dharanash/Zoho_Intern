@@ -240,7 +240,7 @@ public class TransactionController extends ActionSupport {
 	}
 	
 	
-	public void addAutoAdderTransactions() throws ClassNotFoundException, SQLException, ParseException, IOException {
+	public void executeAutoAdderTransactions() throws ClassNotFoundException, SQLException, ParseException, IOException {
 		HttpServletRequest request = ServletActionContext.getRequest();
 		HttpServletResponse response = ServletActionContext.getResponse();
 		int userId = Integer.parseInt(request.getParameter("userId"));
