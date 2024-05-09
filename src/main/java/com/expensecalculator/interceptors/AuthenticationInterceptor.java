@@ -103,7 +103,7 @@ public class AuthenticationInterceptor implements Interceptor{
 		if (userRoleId == 1) {
 			return requestURI.contains("/category") || 	requestURI.contains("/home") || requestURI.contains("/admin")	;
 		} else if (userRoleId == 2) {
-			return requestURI.contains("/home") || requestURI.contains("/guser") || requestURI.contains("/transaction")	;
+			return requestURI.contains("/category") || requestURI.contains("/home") || requestURI.contains("/guser") || requestURI.contains("/transaction")	;
 		}
 		return false;
 	}

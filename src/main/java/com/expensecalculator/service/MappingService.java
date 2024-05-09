@@ -173,10 +173,11 @@ public class MappingService {
 			int categoryId = result.getInt("transaction_category_id");
 			String category = result.getString("category");
 			int typeId = result.getInt("transaction_type_id");
+			int userRoleId = result.getInt("roleid");
 			String type = result.getString("type");
 			Timestamp date = result.getTimestamp("adddate");
 			categories.add(
-					new Category(categoryId, category, typeId , type, date));
+					new Category(categoryId, category, typeId , type, date, userRoleId));
 		}
 		
 		return categories;

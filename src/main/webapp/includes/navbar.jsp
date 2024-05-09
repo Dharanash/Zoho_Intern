@@ -25,7 +25,7 @@
         var adminLinks = `
         	<li class="nav-item"><a class="nav-link" href="../admin/showhome">Home</a></li>
         	<li class="nav-item"><a class="nav-link" href="../admin/showusers">View Users</a></li>
-            <li class="nav-item"><a class="nav-link" href="../admin/showcategory">Category</a></li>
+            <li class="nav-item"><a class="nav-link" href="../home/showcategory">Category</a></li>
 			<li class="nav-item ml-5 mr-3"><a class="nav-link btn btn-danger" href="../home/logout">Logout</a></li>
         `;
         appendLinks(adminLinks);
@@ -36,6 +36,7 @@
         	<li class="nav-item"><a class="nav-link" href="../guser/showhome">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="../guser/showexpense">Expense</a></li>
             <li class="nav-item"><a class="nav-link" href="../guser/showincome">Income</a></li>
+            <li class="nav-item"><a class="nav-link" href="../home/showcategory">Category</a></li>
             <li class="nav-item"><a class="nav-link" href="../guser/showanalysis">Analysis</a></li>
 			<li class="nav-item ml-5 mr-3"><a class="nav-link btn btn-danger" href="../home/logout">Logout</a></li>
         `;

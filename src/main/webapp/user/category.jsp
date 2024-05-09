@@ -39,11 +39,12 @@
 		</table>
 		</form>
 		<br>
-		<table class="table table-striped">
+		<table class="table table-stripped">
 			<thead>
 				<tr>
 					<th scope="col">Category</th>
 					<th scope="col">Type</th>
+					<th scope="col">Date</th>
 					<th scope="col">Update</th>
 				</tr>
 			</thead>
@@ -53,7 +54,7 @@
 	
 	<script type="text/javascript">
 	const userId = sessionStorage.getItem('userId');
-
+	const roleId = sessionStorage.getItem('userRoleId');
         document.getElementById("addForm").addEventListener("submit", function(event){
         event.preventDefault();
         
@@ -107,12 +108,20 @@
             const row = document.getElementById('row_' + categoryId);
             const category = row.querySelector('input[name="category"]').value;
     
-            fetch("../category/update?categoryId="+categoryId+"&category="+category)
+            fetch("../category/update?userId="+userId+"&categoryId="+categoryId+"&category="+category)
             .then(response => {
                 if (response.ok) {
                     alert('Category updated successfully');
                     populateTable();
-                } else {
+                } 
+                else if(response.status === 400){
+    	            throw new Error('Wrong Parameter type.');
+    	        }
+    	        else if(response.status === 409){
+    	            alert('Given Category is already exist, Try with another name.');
+    	            return;
+    	        }
+    	        else {
                     throw new Error('Failed to update expense');
                 }
             })
@@ -122,27 +131,34 @@
             });
         }
         
-        function populateTable(){
-            let url="../category/get?userId="+userId;
+        function populateTable() {
+            let url = "../category/get?userId=" + userId;
             fetch(url)
-            .then(response=> response.json())
-            .then(categories =>{
-                let updateFormBody= document.getElementById("updateTableBody");
-                updateFormBody.innerHTML="";
+                .then(response => response.json())
+                .then(categories => {
+                    let updateFormBody = document.getElementById("updateTableBody");
+                    updateFormBody.innerHTML = "";
 
-                categories.forEach(category=>{
-                    let rowTag = document.createElement("tr");
+                    categories.forEach(category => {
+                        let rowTag = document.createElement("tr");
                         rowTag.id = 'row_' + category.categoryId;
-                        rowTag.innerHTML=
-                        "<td><input name='category' class='form-control' value='" + category.category + "' required></td>" +
-                        "<td>"+category.addDate+"</td>"+
-                        "<td>"+category.transactionType+"</td>"+
-                        "<td> <button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + category.categoryId + ")'>Update</button> </td>";
+
+                        if (roleId == category.roleId) {
+                            rowTag.innerHTML =
+                                "<td><input name='category' class='form-control' value='" + category.category + "' required></td>" +
+                                "<td>" + category.transactionType + "</td>" +
+                                "<td>"+category.addDate+"</td>"+
+                                "<td> <button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + category.categoryId + ")'>Update</button> </td>";
+                        } else {
+                            rowTag.innerHTML =
+                                "<td>" + category.category + "</td>" +
+                                "<td>" + category.transactionType + "</td><td>Not visible</td><td>Not Accessible</td>";
+                        }
 
                         updateFormBody.appendChild(rowTag);
-                });
-            })
-            .catch(error => console.error('Error fetching category data:', error));
+                    });
+                })
+                .catch(error => console.error('Error fetching category data:', error));
         }
 
         window.addEventListener('load', populateTable);

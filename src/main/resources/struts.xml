@@ -62,6 +62,13 @@
 			<interceptor-ref name="authenticationInterceptor" />
 			<result type="json"/>
 		</action>
+		
+		<action name="showcategory"
+			class="com.expensecalculator.controller.HomeController"
+			method="showCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../user/category.jsp</result>
+		</action>
 
 		<action name="logout"
 			class="com.expensecalculator.controller.HomeController"
@@ -214,14 +221,6 @@
 			<interceptor-ref name="authenticationInterceptor" />
 			<result type="json"/>
 		</action>
-		
-		<action name="showcategory"
-			class="com.expensecalculator.controller.CategoryController"
-			method="showCategory">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result name="success">../admin/category.jsp</result>
-		</action>
-		
 		
 	</package>
 	

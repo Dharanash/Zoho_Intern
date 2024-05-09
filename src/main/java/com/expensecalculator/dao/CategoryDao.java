@@ -14,7 +14,8 @@ import com.expensecalculator.service.MappingService;
 
 public class CategoryDao {
 	public ArrayList<Category> getCategories(int userId) throws ClassNotFoundException, SQLException {
-		String sql = "SELECT c.* , t.* FROM transaction_category c join transaction_type t on t.transaction_type_id=c.transaction_type_id WHERE c.userid=?";
+		String sql = "SELECT c.* , t.*, u.roleid FROM transaction_category c join transaction_type t on t.transaction_type_id=c.transaction_type_id  "
+				+ "join users u on c.userid=u.userid WHERE c.userid in (1,?)";
 		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
 			st.setInt(1, userId);
 			ResultSet rs = st.executeQuery();
@@ -45,12 +46,13 @@ public class CategoryDao {
 	    }
 	}
 	
-	public boolean updateCategory(String category, int categoryId) throws ClassNotFoundException, SQLException {
-	    String sql = "update transaction_category set category=?, adddate=? where transaction_category_id=? ";
+	public boolean updateCategory(String category, int categoryId, int userId) throws ClassNotFoundException, SQLException {
+	    String sql = "update transaction_category set category=?, adddate=? where transaction_category_id=? and userid=? ";
 	    try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 	        statement.setString(1, category);
 	        statement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
 	        statement.setInt(3, categoryId);
+	        statement.setInt(4, userId);
 	        int rowsAffected = statement.executeUpdate();
 	        System.out.println(rowsAffected);
 	        return rowsAffected > 0;

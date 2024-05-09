@@ -72,7 +72,6 @@
 						<td><input type="text" class="form-control" name="note" 
 							required></td>
 						<td><select name="categoryId" id="addCategorySelect" class="form-control" required></select>
-						<input type="text" class="form-control" name="category" id="addCategoryInput" placeholder="Custom Category" >
 						</td>
 						<td><input type="datetime-local" class="form-control" name="datetime" id="datetimeInputAdd" required></td>
 						<td><input type="checkbox" name="autoAdder" class="form-control" onclick="autoAdderClick(this)">
@@ -175,19 +174,12 @@
 	        .then(response => response.json())
 	        .then(categories => {
 	            const selectTag = document.getElementById('addCategorySelect');
-				const customInputTag = document.getElementById('addCategoryInput');
-				customInputTag.style.display = 'none';
 	            selectTag.innerHTML = '';
 	            
 	            const doption = document.createElement('option');
 	            doption.value=-1; 
 	            doption.textContent = "-- Select --";
 	            selectTag.appendChild(doption);
-	            
-	            const customOption = document.createElement('option');
-	            customOption.value = 0;
-	            customOption.textContent = "-- Custom Category --";
-	            selectTag.appendChild(customOption);
 
 	            Object.entries(categories).forEach(([key, value]) => {
 	                const option = document.createElement('option');
@@ -197,10 +189,6 @@
 	            });
 	            
 	            selectTag.addEventListener('change', function() {
-	                if (this.value == 0) {
-	                	selectTag.style.display = 'none';
-	                    customInputTag.style.display = 'block';
-	                }
 	             var now = new Date();
 	             var istOffset = 5.5 * 60 * 60 * 1000;
 	             var istTime = new Date(now.getTime() + istOffset);
@@ -237,11 +225,6 @@
 	        return false;
 	    }
 	    
-	    if(category==0 && !form.querySelector('input[name="category"]').value){
-	    	alert('Custom category annot be empty.');
-	    	return false;
-	    }
-	    
 	    if(!datetime){
 	    	alert('Date and Time cannot be empty.');
 	    	return false;
@@ -272,8 +255,6 @@
 	        return;
 	    }
 	    
-	    const selectTag = this.querySelector('select[name="categoryId"]');
-		const customInputTag = this.querySelector('input[name="category"]');
 		const checkbox = this.querySelector('input[name="autoAdder"]');
 	    
 	    fetch("../transaction/add?userId="+userId+"&transactionTypeId="+transactionTypeId, {
@@ -281,12 +262,6 @@
 	        body: new FormData(this)
 	    })
 	    .then(response => {
-	    	
-	    	if(selectTag.value==0){
-    	    	selectTag.style.display="block";
-    			customInputTag.style.display = 'none';
-    	    	populateCategories();
-    	    }
 	    	
 	    	 if (checkbox.checked) {
 	    		 this.querySelector('input[name="autoAdderCount"]').style.display = 'none';

@@ -61,6 +61,10 @@ public class HomeController extends ActionSupport {
 		return SUCCESS;
 	}
 	
+	public String showCategory() {
+		return SUCCESS;
+	}
+	
 	public void getUsers() throws IOException, ClassNotFoundException, SQLException {
 		
 		String json = MappingService.mapToJson(userDao.getUsers());

@@ -78,8 +78,8 @@
 			    
 			    let expenseAmount = 0;
 			    let incomeAmount = 0;
-			    let highestExpenseCategory="";
-			    let highestIncomeCategory="";
+			    let highestExpenseCategory="none";
+			    let highestIncomeCategory="none";
 			    let maxExpense=0;
 			    let maxIncome=0;
 
@@ -148,7 +148,6 @@
 				                console.error("Error adding by repeater:", error);
 				            });
 				}
-
 		
 	</script>
 </body>

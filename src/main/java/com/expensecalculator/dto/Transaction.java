@@ -14,8 +14,8 @@ public class Transaction {
 	public int autoAdderStatus;
 	public String autoAdderStatusString;
 	public Timestamp nextAddDateTimestamp;
-	public Integer count;
-	public Integer autoAdderCategoryId;
+	public int count;
+	public int autoAdderCategoryId;
 	
 	public Transaction(int userId, double amount, String note, String datetime, int categoryId, int typeId, int autoAdderStatus) {
 		this.userId=userId;
