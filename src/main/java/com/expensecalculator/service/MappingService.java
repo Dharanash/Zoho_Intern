@@ -14,7 +14,6 @@ import java.util.Map;
 
 import org.apache.struts2.json.annotations.JSON;
 
-import com.expensecalculator.dto.AutoAdderTransaction;
 import com.expensecalculator.dto.Category;
 import com.expensecalculator.dto.Transaction;
 import com.expensecalculator.dto.User;
@@ -34,6 +33,28 @@ public class MappingService {
 		user = new User(userid, name, roleId);
 
 		return user;
+	}
+	
+	public static Transaction mapToTransaction(ResultSet result) throws SQLException {
+		Transaction transaction=null;
+		while (result.next()) {
+			int transactionId = result.getInt("transactionid");
+			int userId = result.getInt("userid");
+			String note = result.getString("note");
+			double amount = result.getDouble("amount");
+			int categoryId = result.getInt("categoryid");
+			int typeId = result.getInt("transaction_type_id");
+			Timestamp datetime = result.getTimestamp("datetime");
+			int autoAdderStatusId = result.getInt("auto_adder_status_id");
+			Timestamp ndatetime = result.getTimestamp("next_add_date");
+			int count = result.getInt("repeat_count");
+			int autoAdderCategoryId = result.getInt("auto_adder_category_id");
+			transaction=
+					new Transaction(transactionId, userId, amount , note, datetime.toString(), categoryId,typeId, autoAdderStatusId, ndatetime
+							,count, autoAdderCategoryId);
+		}
+		
+		return transaction;
 	}
 
 	public static ArrayList<Transaction> mapToTransactionList(ResultSet result) throws SQLException {
@@ -55,8 +76,31 @@ public class MappingService {
 		return transactions;
 	}
 	
-	public static ArrayList<AutoAdderTransaction> mapToAutoAdderTransactionList(ResultSet result) throws SQLException {
-		ArrayList<AutoAdderTransaction> transactions = new ArrayList<>();
+	public static ArrayList<Transaction> mapToAutoAdderTransactionList(ResultSet result) throws SQLException {
+		ArrayList<Transaction> transactions = new ArrayList<>();
+		while (result.next()) {
+			int transactionId = result.getInt("transactionid");
+			int userId = result.getInt("userid");
+			String note = result.getString("note");
+			double amount = result.getDouble("amount");
+			int categoryId = result.getInt("categoryid");
+			String category = result.getString("category");
+			int typeId = result.getInt("transaction_type_id");
+			Timestamp datetime = result.getTimestamp("datetime");
+			int autoAdderStatusId = result.getInt("auto_adder_status_id");
+			Timestamp ndatetime = result.getTimestamp("next_add_date");
+			int count = result.getInt("repeat_count");
+			int autoAdderCategoryId = result.getInt("auto_adder_category_id");
+			transactions.add(
+					new Transaction(transactionId, userId, amount , note, datetime.toString(), categoryId,category, typeId, autoAdderStatusId, ndatetime
+							,count, autoAdderCategoryId));
+		}
+		
+		return transactions;
+	}
+	
+	public static ArrayList<Transaction> mapToRepeaterTransactionList(ResultSet result) throws SQLException {
+		ArrayList<Transaction> transactions = new ArrayList<>();
 		while (result.next()) {
 			int transactionId = result.getInt("transactionid");
 			int userId = result.getInt("userid");
@@ -67,8 +111,35 @@ public class MappingService {
 			Timestamp datetime = result.getTimestamp("datetime");
 			int autoAdderStatusId = result.getInt("auto_adder_status_id");
 			Timestamp ndatetime = result.getTimestamp("next_add_date");
+			int count = result.getInt("repeat_count");
+			int autoAdderCategoryId = result.getInt("auto_adder_category_id");
 			transactions.add(
-					new AutoAdderTransaction(transactionId, userId, amount , note, datetime.toString(), categoryId,typeId, autoAdderStatusId, ndatetime));
+					new Transaction(transactionId, userId, amount , note, datetime.toString(), categoryId, typeId, autoAdderStatusId, ndatetime
+							,count, autoAdderCategoryId));
+		}
+		
+		return transactions;
+	}
+	
+	public static ArrayList<Transaction> mapToTransactionListWithAutoAdderStatus(ResultSet result) throws SQLException {
+		ArrayList<Transaction> transactions = new ArrayList<>();
+		while (result.next()) {
+			int transactionId = result.getInt("transactionid");
+			int userId = result.getInt("userid");
+			String note = result.getString("note");
+			double amount = result.getDouble("amount");
+			int categoryId = result.getInt("categoryid");
+			String category = result.getString("category");
+			int typeId = result.getInt("transaction_type_id");
+			Timestamp datetime = result.getTimestamp("datetime");
+			int autoAdderStatusId = result.getInt("auto_adder_status_id");
+			Timestamp ndatetime = result.getTimestamp("next_add_date");
+			int count = result.getInt("repeat_count");
+			int autoAdderCategoryId = result.getInt("auto_adder_category_id");
+			String autoAdderStatusString = result.getString("autoAdderStatus");
+			transactions.add(
+					new Transaction(transactionId, userId, amount , note, datetime.toString(), categoryId, category, typeId, autoAdderStatusId, ndatetime
+							,count, autoAdderCategoryId, autoAdderStatusString));
 		}
 		
 		return transactions;
@@ -106,6 +177,18 @@ public class MappingService {
 		HashMap<Integer, String> map = new HashMap<>();
 		while (result.next()) {
 			int categoryId = result.getInt("transaction_category_id");
+			String category = result.getString("category");
+			map.put(categoryId, category);
+		}
+		
+		return map;
+		
+	}
+	
+	public static HashMap<Integer, String> mapToAutoAdderCategory(ResultSet result) throws SQLException {
+		HashMap<Integer, String> map = new HashMap<>();
+		while (result.next()) {
+			int categoryId = result.getInt("auto_adder_category_id");
 			String category = result.getString("category");
 			map.put(categoryId, category);
 		}

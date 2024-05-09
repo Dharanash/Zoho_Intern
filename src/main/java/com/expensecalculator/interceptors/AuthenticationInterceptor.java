@@ -51,11 +51,6 @@ public class AuthenticationInterceptor implements Interceptor{
             	removeAuthorization(request, response);
                 return null;
             }
-            else if(token!=null && requestURI.contains("/user")) {
-            	System.out.println(requestURI+" "+(token==null));
-            	response.sendRedirect(request.getContextPath() + "/home/showhome");
-            	return null;
-            }
             else if (!hasAccess(userRoleId, requestURI)) {
             	System.out.println(requestURI+" "+(token==null));
             	removeAuthorization(request, response);
@@ -106,7 +101,7 @@ public class AuthenticationInterceptor implements Interceptor{
 	
 	private boolean hasAccess(int userRoleId, String requestURI) {
 		if (userRoleId == 1) {
-			return requestURI.contains("/category") || 	requestURI.contains("/home") || requestURI.contains("/transaction")	;
+			return requestURI.contains("/category") || 	requestURI.contains("/home") || requestURI.contains("/admin")	;
 		} else if (userRoleId == 2) {
 			return requestURI.contains("/home") || requestURI.contains("/guser") || requestURI.contains("/transaction")	;
 		}

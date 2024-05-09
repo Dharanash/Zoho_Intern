@@ -67,8 +67,16 @@
 		      sessionStorage.setItem('userId', data.userId);
 		      sessionStorage.setItem('userName', data.name);
 		      sessionStorage.setItem('userRoleId', data.roleId);
-		      window.location.href = "../home/showhome";
 		      
+		      if(data.roleId==1)
+		      {
+		    	  window.location.href = "../admin/showhome";
+		      }
+		      else if(data.roleId==2)
+		      {
+		    	  window.location.href = "../guser/showhome";
+		      }
+
 		   })
 		   .catch(error => {
 		       console.error('Error adding expense:', error);

@@ -25,7 +25,8 @@
 		<div class="row listItem">
 			<div class="col-md-6">
 				<h5 id="totalIncome" class="p-2">Total Income:</h5>
-				<h5 id="HighestIncomeCategory" class="p-2">Highest Income Category:</h5>
+				<h5 id="HighestIncomeCategory" class="p-2">Highest Income
+					Category:</h5>
 				<div class="left-container border border-primary rounded  p-3">
 					<ul id="incomeList" class="list-group">
 
@@ -34,7 +35,8 @@
 			</div>
 			<div class="col-md-6">
 				<h5 id="totalExpense" class="p-2">Total Expense:</h5>
-				<h5 id="HighestExpenseCategory" class="p-2">Highest Expense Category:</h5>
+				<h5 id="HighestExpenseCategory" class="p-2">Highest Expense
+					Category:</h5>
 				<div class="right-container border border-primary rounded  p-3">
 					<ul id="expenseList" class="list-group">
 
@@ -51,7 +53,6 @@
 		var userRoleId = sessionStorage.getItem('userRoleId');
 		var addAutoRepeaterExecuted = sessionStorage.getItem('addAutoRepeaterExecuted');
 		document.getElementById('userMsg').textContent = 'Welcome ' + userName;
-		if(userRoleId==2){
 			
 			window.addEventListener('load', addAutoRepeater());
 			window.addEventListener('load', populateTables());
@@ -115,8 +116,8 @@
 			    const balance = incomeAmount - expenseAmount;
 
 			    const balanceElement = document.getElementById('balance');
-			    
-			    balanceElement.innerText = "Monthly Analysis : " + incomeAmount + " - " + expenseAmount + " = " + balance.toFixed(2);
+			 	var currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+			    balanceElement.innerText = currentMonthName+" Month Analysis : " + incomeAmount + " - " + expenseAmount + " = " + balance.toFixed(2);
 
 			    if (balance < 0) {
 			        balanceElement.classList.remove('text-success'); 
@@ -128,18 +129,15 @@
 			}
 			
 			function addAutoRepeater() {
-				 if (!addAutoRepeaterExecuted) {
 				        fetch("../transaction/addmonthlyrepeater?userId=" + userId)
 				            .then(response => response.json())
 				            .then(data => {
-				                alert(data.expenseCount + " Expenses added by monthly repeater.");
-				                alert(data.incomeCount + " Incomes added by monthly repeater.");
 				                if (data.expenseCount > 0) {
 				                    alert(data.expenseCount + " Expenses added by monthly repeater.");
 				                }
 
 				                if (data.incomeCount > 0) {
-				                    alert(data.expenseCount + " Incomes added by monthly repeater.");
+				                    alert(data.incomeCount + " Incomes added by monthly repeater.");
 				                }
 
 				                console.log("Repeator added successfully");
@@ -149,13 +147,8 @@
 				            .catch(error => {
 				                console.error("Error adding by repeater:", error);
 				            });
-				    }
 				}
 
-			
-		}
-		
-		
 		
 	</script>
 </body>

@@ -28,8 +28,20 @@ public class InputValidationService {
 		return Timestamp.valueOf(dateTime);
 	}
 	
-	public static long getNextMonthTimestamp(String startDateStr, String inputDateStr) throws ParseException {
-        Date inputDate = dateFormat.parse(inputDateStr);
+	public static long getNextTimestamp(String startDateStr, String inputDateStr, int count, int autoAdderCategoryId) throws ParseException {
+		Date inputDate = dateFormat.parse(inputDateStr);
+		if(autoAdderCategoryId==1) {
+			Calendar calendar = Calendar.getInstance();
+	        calendar.setTime(inputDate);
+	        calendar.add(Calendar.DATE, count);
+	        return calendar.getTimeInMillis();
+		}
+		else if(autoAdderCategoryId==2) {
+			Calendar calendar = Calendar.getInstance();
+	        calendar.setTime(inputDate);
+	        calendar.add(Calendar.WEEK_OF_MONTH, count);
+	        return calendar.getTimeInMillis();
+		}
         Date startDate = dateFormat.parse(startDateStr);
         
         Calendar calendar = Calendar.getInstance();

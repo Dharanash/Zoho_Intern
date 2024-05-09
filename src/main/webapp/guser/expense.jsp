@@ -26,19 +26,23 @@
       <div class="modal-body">
         <form id="updateExpenseForm">
           <input type="hidden" class="form-control" name="transactionId" id="expenseIdInput">
-          <input type="hidden" class="form-control" name="userId" id="userIdInput">
-
+		  <input type="hidden" class="form-control" name="autoAdderStatusId" id="autoAdderStatusId">
           <label>Amount:</label>
           <input type="number" class="form-control" name="amount" id="amountInput" required>
 
           <label>Note:</label>
           <input type="text" class="form-control" name="note" id="noteInput" required>
-          
+         
           <label>Category:</label>
           <select name="categoryId" class="form-control" id="updateCategorySelect" required></select>
 
           <label>Date:</label>
           <input type="datetime-local" class="form-control" name="datetime"  id="datetimeInput" required>
+         
+         <label>Repeater:</label>
+         <input type="checkbox" name="autoAdder" class="form-control" id="autoAdderCheckboxUpdate" onclick="autoAdderClickUpdate(this)">
+			<input type="number" min="1" name="autoAdderCount" id="autoAdderCountUpdate" placeholder="Repeat" class="form-control" style="display: none;">
+			<select name="autoAdderCategoryId" id="autoAdderCategoryUpdate" class="form-control" style="display: none;"></select>
 
         </form>
       </div>
@@ -58,7 +62,7 @@
 					<th scope="col">Note</th>
 					<th scope="col">Category</th>
 					<th scope="col">DateTime</th>
-					<th scope="col">Monthly Repeater</th>
+					<th scope="col">Repeater</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -71,7 +75,9 @@
 						<input type="text" class="form-control" name="category" id="addCategoryInput" placeholder="Custom Category" >
 						</td>
 						<td><input type="datetime-local" class="form-control" name="datetime" id="datetimeInputAdd" required></td>
-						<td><input type="checkbox" name="autoAdder" class="form-control" ></td>
+						<td><input type="checkbox" name="autoAdder" class="form-control" onclick="autoAdderClick(this)">
+						<input type="number" min="1" name="autoAdderCount" id="autoAdderCountInput" class="form-control" style="display: none;" placeholder="Repeat">
+						<select name="autoAdderCategoryId" id="autoAdderCategorySelect" class="form-control" style="display: none;"></select></td>
 						<td>
 							<button type="submit" class="btn btn-sm btn-success">Add</button>
 						</td>
@@ -87,7 +93,7 @@
 		<table class="table table-striped">
 			<thead>
 				<tr>
-					<th scope="col">Monthly Repeater</th>
+					<th scope="col">Repeater</th>
 					<th scope="col">Amount</th>
 					<th scope="col">Note</th>
 					<th scope="col">Category</th>
@@ -107,7 +113,62 @@
 	var repeated=3;
 	var userId = sessionStorage.getItem('userId');
 	window.addEventListener('load', populateCategories);
+	window.addEventListener('load', populateAutoAdderCategories('autoAdderCategorySelect'));
+	window.addEventListener('load', populateAutoAdderCategories('autoAdderCategoryUpdate'));
+	
+	function populateAutoAdderCategories(selectTagId){
+		let url = "../transaction/getautoaddercategory?userId="+userId;
+		fetch(url, {method:'POST'})
+        .then(response => response.json())
+        .then(categories => {
+            const selectTag = document.getElementById(selectTagId);
+            selectTag.innerHTML = '';
 
+            Object.entries(categories).forEach(([key, value]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = value;
+                selectTag.appendChild(option);
+            });
+
+        })
+        .catch(error => console.error('Error fetching auto adder categories:', error));
+}
+	
+	function autoAdderClick(checkbox)
+	{
+		const selectTag = document.getElementById('autoAdderCategorySelect');
+		const count = document.getElementById('autoAdderCountInput');
+		
+		 if (checkbox.checked) {
+		selectTag.style.display = 'block';
+		count.style.display = 'block';
+		 }
+		 else{
+			 selectTag.style.display = 'none';
+			count.style.display = 'none';
+		 }
+		 
+	}
+	
+	function autoAdderClickUpdate(checkbox)
+	{
+		const selectTag = document.getElementById('autoAdderCategoryUpdate');
+		const count = document.getElementById('autoAdderCountUpdate');
+		const status = document.getElementById('autoAdderStatusId');
+		
+		 if (checkbox.checked) {
+			 status.value=1;
+		selectTag.style.display = 'block';
+		count.style.display = 'block';
+		 }
+		 else{
+			 status.value=2;
+			 selectTag.style.display = 'none';
+			count.style.display = 'none';
+		 }		 
+	}
+	
 	function populateCategories() {
 		let url = "../transaction/getcategory?userId="+userId+"&transactionTypeId="+transactionTypeId;
 	    fetch(url, {method:'POST'})
@@ -140,8 +201,11 @@
 	                	selectTag.style.display = 'none';
 	                    customInputTag.style.display = 'block';
 	                }
-	                let date=new Date().toISOString().slice(0, 16);
-	                document.getElementById('datetimeInputAdd').value =currentDateISO 
+	             var now = new Date();
+	             var istOffset = 5.5 * 60 * 60 * 1000;
+	             var istTime = new Date(now.getTime() + istOffset);
+	             var formattedDateTime = istTime.toISOString().slice(0, 16);
+	                document.getElementById('datetimeInputAdd').value =formattedDateTime; 
 	            });
 	        })
 	        .catch(error => console.error('Error fetching categories:', error));
@@ -152,6 +216,7 @@
 	    const note = form.querySelector('input[name="note"]').value;
 	    const datetime = form.querySelector('input[name="datetime"]').value;
 	    const category=form.querySelector('select[name="categoryId"]').value;
+	    const checkbox=form.querySelector('input[name="autoAdder"]');
 	    
 	    if(category==0 && !form.querySelector('input[name="category"]').value){
 	    	alert('Custom category annot be empty.');
@@ -181,6 +246,22 @@
 	    	alert('Date and Time cannot be empty.');
 	    	return false;
 	    }
+	    
+	    if(checkbox.checked){
+	    	const autoAdderCategory=form.querySelector('select[name="autoAdderCategoryId"]').value;
+	    	const count = form.querySelector('input[name="autoAdderCount"]').value;
+	    	
+	    	 if (!count || isNaN(count) || count <= 0) {
+	 	        alert('Repeat day count must be a positive integer.');
+	 	        return false;
+	 	    }
+	    	 
+	    	 if (!autoAdderCategory) {
+	 	        alert('Please select anyone of repeater category.');
+	 	        return false;
+	 	    }
+	    }
+	    
 	    return true;
 	}
 
@@ -193,7 +274,7 @@
 	    
 	    const selectTag = this.querySelector('select[name="categoryId"]');
 		const customInputTag = this.querySelector('input[name="category"]');
-		
+		const checkbox = this.querySelector('input[name="autoAdder"]');
 	    
 	    fetch("../transaction/add?userId="+userId+"&transactionTypeId="+transactionTypeId, {
 	        method: 'POST',
@@ -206,6 +287,11 @@
     			customInputTag.style.display = 'none';
     	    	populateCategories();
     	    }
+	    	
+	    	 if (checkbox.checked) {
+	    		 this.querySelector('input[name="autoAdderCount"]').style.display = 'none';
+	    		 this.querySelector('select[name="autoAdderCategoryId"]').style.display = 'none';
+	    	 }
 	    	
 	        if (response.ok) {
 	            alert('Expense added successfully');
@@ -233,23 +319,48 @@
 	});
 
 	async function updateExpense(transactionId) {
-
-	    const row = document.getElementById('expenseRow_' + transactionId);
-	    const userId = row.querySelector('input[name="userId"]').value;
-	    const amount = row.querySelector('input[name="amount"]').value;
-	    const note = row.querySelector('input[name="note"]').value;
-	    const datetime = row.querySelector('input[name="datetime"]').value;
-
-	    document.getElementById('expenseIdInput').value = transactionId;
-	    document.getElementById('userIdInput').value = userId;
-	    document.getElementById('amountInput').value = amount;
-	    document.getElementById('noteInput').value = note;
-	    document.getElementById('datetimeInput').value = datetime.slice(0, 16).replace('T', ' ');
-	    	
 	    try {
+	        
+	        const transactionResponse = await fetch("../transaction/gettransaction?userId="+userId+"&transactionId="+transactionId);
+	        const transactionData = await transactionResponse.json();
+
+	        document.getElementById('expenseIdInput').value = transactionData.transactionId;
+	        document.getElementById('amountInput').value = transactionData.amount;
+	        document.getElementById('noteInput').value = transactionData.note;
+	        document.getElementById('datetimeInput').value = transactionData.datetime.slice(0, 16).replace('T', ' ');
+	        document.getElementById('autoAdderStatusId').value = transactionData.autoAdderStatus;
+			
+	        const updateCheckBox = document.getElementById('autoAdderCheckboxUpdate');
+	        const updateSelectTag = document.getElementById('autoAdderCategoryUpdate');
+	        const count = document.getElementById('autoAdderCountUpdate');
+
+	        if (transactionData.autoAdderStatus === 1) {
+	            const autoAdderCount = transactionData.count;
+	            const autoAdderCategoryId = transactionData.autoAdderCategoryId;
+	            
+	            updateSelectTag.options[autoAdderCategoryId - 1].selected = true;
+	            count.value = autoAdderCount;
+	            updateCheckBox.style.display = 'block';
+	            updateCheckBox.checked = true;
+	            updateSelectTag.style.display = 'block';
+	            count.style.display = 'block';
+	            
+	        } else if(transactionData.autoAdderStatus === 2) {
+	        	updateCheckBox.style.display = 'block';
+	        	updateCheckBox.checked = false;
+	            updateSelectTag.style.display = 'none';
+	            count.style.display = 'none';
+	        }
+	        else
+	        {
+	        	updateCheckBox.style.display = 'none';
+	            updateSelectTag.style.display = 'none';
+	            count.style.display = 'none';
+	        }
+	        
 	        let url = "../transaction/getcategory?userId="+userId+"&transactionTypeId="+transactionTypeId;
-	        const response = await fetch(url);
-	        const categories = await response.json();
+	        const categoryResponse = await fetch(url);
+	        const categories = await categoryResponse.json();
 
 	        const selectTag = document.getElementById('updateCategorySelect');
 	        selectTag.innerHTML = '';
@@ -260,12 +371,12 @@
 	            option.textContent = value;
 	            selectTag.appendChild(option);
 	        });
-	    } catch (error) {
-	        console.error('Error fetching categories:', error);
-	    }
 
-	    const updateExpenseModal = new bootstrap.Modal(document.getElementById('updateExpenseModal'));
-	    updateExpenseModal.show();
+	        const updateExpenseModal = new bootstrap.Modal(document.getElementById('updateExpenseModal'));
+	        updateExpenseModal.show();
+	    } catch (error) {
+	        console.error('Error updating expense:', error);
+	    }
 	}
 
 	function submitUpdateExpenseForm() {
@@ -277,13 +388,14 @@
 		
 		const formData = new FormData(form);
 
-	    fetch("../transaction/update?transactionTypeId="+transactionTypeId, {
+	    fetch("../transaction/update?userId="+userId+"&transactionTypeId="+transactionTypeId, {
 	        method: 'POST',
 	        body: formData
 	    })
 	    .then(response => {
 	        if (response.ok) {
 	            alert('Expense updated successfully');
+	            form.reset();
 	            populateExpenseTable();
 	        } else {
 	            throw new Error('Failed to update expense');
@@ -343,9 +455,7 @@
 	                const row = document.createElement('tr');
 	                row.id = 'expenseRow_' + expense.transactionId;
 	                row.innerHTML =
-	                    "<input type='hidden' name='userId' value='" + expense.userId + "'>" +
-	                    "<input type='hidden' name='categoryId' value='" + expense.categoryId + "'>" +
-	                    "<td><input type='checkbox' name='autoAdder' onclick='monthlyRepeaterClick(" + expense.transactionId + ")'></td>" +
+	                    "<td>"+expense.autoAdderStatusString+"</td>" +
 	                    "<td><input name='amount' value='" + expense.amount + "' readonly></td>" +
 	                    "<td><input name='note' value='" + expense.note + "' readonly></td>" +
 	                    "<td><input name='category' value='" + expense.category + "' readonly></td>" +
@@ -354,62 +464,12 @@
 	                    "<button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + expense.transactionId + ")'>Update</button>" +
 	                    "</td>" +
 	                    "<td><button class='btn btn-sm btn-danger' onclick='removeExpense(" + expense.transactionId + ")'>Remove</button></td>";
-
-	                    const checkbox = row.querySelector("input[name='autoAdder']");
-	                    if (expense.autoAdderStatus=="1") {
-	                        checkbox.checked = true;
-	                    } else if (expense.autoAdderStatus == "2") {
-	                        checkbox.checked = false;
-	                    } else if (expense.autoAdderStatus == "3") {
-	                        checkbox.disabled = true;
-	                    }
 	                    
 	                    expenseTableBody.appendChild(row);
 	            });
 	            document.getElementById('totalExpense').innerText = "Total Expense: " + totalExpense.toFixed(2);
 	        })
 	        .catch(error => console.error('Error fetching expense data:', error));
-	}
-	
-	function monthlyRepeaterClick(transactionId) {
-		
-		const row = document.getElementById('expenseRow_' + transactionId);
-	    const datetime = row.querySelector('input[name="datetime"]').value;
-	    const checkbox = row.querySelector('input[name="autoAdder"]');
-	    
-	    if (checkbox.checked) {
-	    	console.log("Expense selected:", checkbox.value);
-	        fetch("../transaction/addrepeater?transactionId="+transactionId+"&datetime="+datetime)
-		    .then(response => {
-		        if (response.ok) {
-		            alert('Monthly repeater added successfully');
-		        }
-		        else{
-		        	throw new Error('Failed to add repeater');
-		        }
-		        
-		    })
-		    .catch(error => {
-		        console.error('Error adding repeater:', error);
-		        alert('Failed to add repeater. Please try again.');
-		    });
-	    } else {
-	        console.log("Expense deselected:", checkbox.value);
-	        fetch("../transaction/removerepeater?transactionId="+transactionId+"&datetime="+datetime)
-		    .then(response => {
-		        if (response.ok) {
-		            alert('Monthly repeater removed successfully');
-		        }
-		        else{
-		        	throw new Error('Failed to remove repeater');
-		        }
-		        
-		    })
-		    .catch(error => {
-		        console.error('Error removing repeater:', error);
-		        alert('Failed to remove repeater. Please try again.');
-		    });
-	    }
 	}
 
 	window.addEventListener('load', populateExpenseTable);

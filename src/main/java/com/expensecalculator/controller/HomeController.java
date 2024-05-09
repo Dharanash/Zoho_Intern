@@ -14,7 +14,11 @@ import com.expensecalculator.service.MappingService;
 import com.opensymphony.xwork2.ActionSupport;
 
 public class HomeController extends ActionSupport {
-	public String showHome() throws Exception {
+	public String showUserHome() throws Exception {
+		return SUCCESS;
+	}
+	
+	public String showAdminHome() throws Exception {
 		return SUCCESS;
 	}
 	

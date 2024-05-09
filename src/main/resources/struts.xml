@@ -55,14 +55,6 @@
 			<interceptor name="authenticationInterceptor"
 				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
 		</interceptors>
-
-		<action name="showhome"
-			class="com.expensecalculator.controller.HomeController"
-			method="showHome">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result name="success">../user/index.jsp</result>
-		</action>
-		
 		
 		<action name="getuser"
 			class="com.expensecalculator.controller.HomeController"
@@ -115,6 +107,20 @@
 			<result type="json"/>
 		</action>
 		
+		<action name="gettransaction"
+			class="com.expensecalculator.controller.TransactionController"
+			method="getTransactionFromTransactionId">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
+		<action name="getautoaddercategory"
+			class="com.expensecalculator.controller.TransactionController"
+			method="getAutoAdderCategory">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
 		<action name="add"
 			class="com.expensecalculator.controller.TransactionController"
 			method="addTransaction">
@@ -125,20 +131,6 @@
 		<action name="addmonthlyrepeater"
 			class="com.expensecalculator.controller.TransactionController"
 			method="addAutoAdderTransactions">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
-		<action name="addrepeater"
-			class="com.expensecalculator.controller.TransactionController"
-			method="addRepeater">
-			<interceptor-ref name="authenticationInterceptor" />
-			<result type="json"/>
-		</action>
-		
-		<action name="removerepeater"
-			class="com.expensecalculator.controller.TransactionController"
-			method="removeRepeater">
 			<interceptor-ref name="authenticationInterceptor" />
 			<result type="json"/>
 		</action>
@@ -166,6 +158,13 @@
 				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
 		</interceptors>
 		
+		<action name="showhome"
+			class="com.expensecalculator.controller.HomeController"
+			method="showUserHome">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../guser/index.jsp</result>
+		</action>
+		
 		<action name="showexpense"
 			class="com.expensecalculator.controller.HomeController"
 			method="showExpense">
@@ -189,18 +188,34 @@
 		
 	</package>
 	
-	<package name="category" namespace="/category" extends="struts-default,json-default">
+	<package name="admin" namespace="/admin" extends="struts-default,json-default">
 		<interceptors>
 			<interceptor name="authenticationInterceptor"
 				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
 		</interceptors>
 		
-		<action name="show"
+		<action name="showhome"
+			class="com.expensecalculator.controller.HomeController"
+			method="showUserHome">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result name="success">../admin/index.jsp</result>
+		</action>
+		
+		<action name="showcategory"
 			class="com.expensecalculator.controller.CategoryController"
 			method="showCategory">
 			<interceptor-ref name="authenticationInterceptor" />
 			<result name="success">../admin/category.jsp</result>
 		</action>
+		
+		
+	</package>
+	
+	<package name="category" namespace="/category" extends="struts-default,json-default">
+		<interceptors>
+			<interceptor name="authenticationInterceptor"
+				class="com.expensecalculator.interceptors.AuthenticationInterceptor" />
+		</interceptors>
 		
 		<action name="get"
 			class="com.expensecalculator.controller.CategoryController"
