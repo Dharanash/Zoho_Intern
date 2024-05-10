@@ -57,7 +57,6 @@ public class LoginController extends ActionSupport {
 		
 		String token = generateJWT(user.getUserId(), user.getRoleId());
         
-        // Set JWT token in response header
         ServletActionContext.getResponse().addHeader("Authorization", token);
 		String jsonObject= MappingService.mapToJson(user);
 		response.getWriter().write(jsonObject.toString());

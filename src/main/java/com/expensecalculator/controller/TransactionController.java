@@ -125,7 +125,7 @@ public class TransactionController extends ActionSupport {
 			double amount = Double.parseDouble(request.getParameter("amount"));
 			int categoryId = Integer.parseInt(request.getParameter("categoryId"));
 			String dateTime = InputValidationService.getTimestamp(request.getParameter("datetime")).toString();
-			int autoAdderStatusId = request.getParameter("autoAdder") == null ? 2 : 1;
+			int autoAdderStatusId = request.getParameter("autoAdder") == null ? AutoAdderStatus.Unchecked.getStatusId() : AutoAdderStatus.Checked.getStatusId();
 
 			if (!transactionDao.isValidCategory(userId, categoryId, transactionTypeId)) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -137,7 +137,7 @@ public class TransactionController extends ActionSupport {
 				int count = Integer.parseInt(request.getParameter("autoAdderCount"));
 				int autoAdderCategoryId = Integer.parseInt(request.getParameter("autoAdderCategoryId"));
 				Timestamp dataTimestamp = new Timestamp(
-						InputValidationService.getNextTimestamp(dateTime, dateTime, count, autoAdderCategoryId));
+						InputValidationService.getNextTimestamp(dateTime, count, autoAdderCategoryId));
 				transaction = new Transaction(userId, amount, notes, dateTime, categoryId, transactionTypeId,
 						autoAdderStatusId, dataTimestamp, count, autoAdderCategoryId);
 				transactionDao.addTransactionWithAutoAdder(transaction);
@@ -174,7 +174,7 @@ public class TransactionController extends ActionSupport {
 				int autoAdderCategoryId = Integer.parseInt(request.getParameter("autoAdderCategoryId"));
 				String dateTimeStr = InputValidationService.getTimestamp(datetime).toString();
 				Timestamp nextTimestamp = new Timestamp(
-						InputValidationService.getNextTimestamp(dateTimeStr, dateTimeStr, count, autoAdderCategoryId));
+						InputValidationService.getNextTimestamp(dateTimeStr, count, autoAdderCategoryId));
 				Transaction transaction = new Transaction(transactionId, userId, amount, notes, datetime, categoryId,
 						transactionTypeId, autoAdderStatusId, nextTimestamp, count, autoAdderCategoryId);
 				transactionDao.updateTransaction(transaction);

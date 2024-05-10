@@ -8,47 +8,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Income</title>
-    <!-- Include any necessary CSS or JavaScript libraries -->
+    
+<style>
+
+   .popup-form-container {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.popup-content {
+  width: 400px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+  </style>
+  
 </head>
 <body>
 <%@include file="../includes/navbar.jsp" %>
 
-<!-- Modal -->
-<div class="modal fade" id="updateIncomeModal" tabindex="-1" aria-labelledby="updateIncomeModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="updateExpenseModalLabel">Update Income</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="updateIncomeForm">
+<div id="popupForm" class="popup-form-container">
+  <div class="card popup-content">
+    <div class="card-header">
+      <h5 class="card-title">Update Expense</h5>
+      <button type="button" class="close" id="closePopupBtn">&times;</button>
+    </div>
+    <div class="card-body">
+      <form id="updateIncomeForm">
           <input type="hidden" class="form-control" name="transactionId" id="incomeIdInput">
-          <input type="hidden" class="form-control" name="autoAdderStatusId" id="autoAdderStatusId">
-
+		  <input type="hidden" class="form-control" name="autoAdderStatusId" id="autoAdderStatusId">
           <label>Amount:</label>
           <input type="number" class="form-control" name="amount" id="amountInput" required>
 
           <label>Note:</label>
           <input type="text" class="form-control" name="note" id="noteInput" required>
-          
+         
           <label>Category:</label>
           <select name="categoryId" class="form-control" id="updateCategorySelect" required></select>
 
           <label>Date:</label>
-          <input type="datetime-local" class="form-control" name="datetime" id="datetimeInput" required>
-        
-          <label>Repeater:</label>
+          <input type="datetime-local" class="form-control" name="datetime"  id="datetimeInput" required>
+         
+         <label>Repeater:</label>
          <input type="checkbox" name="autoAdder" class="form-control" id="autoAdderCheckboxUpdate" onclick="autoAdderClickUpdate(this)">
 			<input type="number" min="1" name="autoAdderCount" id="autoAdderCountUpdate" placeholder="Repeat" class="form-control" style="display: none;">
 			<select name="autoAdderCategoryId" id="autoAdderCategoryUpdate" class="form-control" style="display: none;"></select>
 
-        
         </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="submitUpdateIncomeForm()">Save changes</button>
-      </div>
+    </div>
+    <div class="card-footer">
+      <button type="button" class="btn btn-primary" onclick="submitUpdateExpenseForm()">Save changes</button>
     </div>
   </div>
 </div>
@@ -286,6 +310,11 @@ document.getElementById('addIncomeForm').addEventListener('submit', function(eve
     });
 });
 
+document.getElementById('closePopupBtn').addEventListener('click', function() {
+	  document.getElementById('popupForm').style.display = 'none';
+	});
+
+
 async function updateIncome(transactionId) {
     try {
         
@@ -340,8 +369,7 @@ async function updateIncome(transactionId) {
             selectTag.appendChild(option);
         });
 
-        const updateExpenseModal = new bootstrap.Modal(document.getElementById('updateIncomeModal'));
-        updateExpenseModal.show();
+        document.getElementById('popupForm').style.display = 'block';
     } catch (error) {
         console.error('Error updating expense:', error);
     }
@@ -376,12 +404,7 @@ function submitUpdateIncomeForm() {
         alert('Failed to update expense. Please try again.');
     });
 
-    const modalElement = document.getElementById('updateIncomeModal');
-    modalElement.style.display = 'none';
-    
-    document.body.classList.remove('modal-open');
-    const modalBackdrop = document.getElementsByClassName('modal-backdrop')[0];
-    modalBackdrop.parentNode.removeChild(modalBackdrop); 
+    document.getElementById('popupForm').style.display = 'none'; 
 }
 
 function removeIncome(transactionId) {

@@ -30,6 +30,10 @@ public class InputValidationService {
 		return Timestamp.valueOf(dateTime);
 	}
 	
+	public static long getNextTimestamp(String inputDateStr, int count, int autoAdderCategoryId) throws ParseException {
+		return getNextTimestamp(inputDateStr, inputDateStr, count, autoAdderCategoryId);
+	}
+	
 	public static long getNextTimestamp(String startDateStr, String inputDateStr, int count, int autoAdderCategoryId) throws ParseException {
 		Date inputDate = dateFormat.parse(inputDateStr);
 		if(autoAdderCategoryId==AutoAdderCategory.Day.getCategoryId()) {
