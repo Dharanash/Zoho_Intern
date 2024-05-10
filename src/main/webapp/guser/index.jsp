@@ -133,11 +133,11 @@
 				            .then(response => response.json())
 				            .then(data => {
 				                if (data.expenseCount > 0) {
-				                    alert(data.expenseCount + " Expenses added by monthly repeater.");
+				                    alert(data.expenseCount + " Expenses added by repeater.");
 				                }
 
 				                if (data.incomeCount > 0) {
-				                    alert(data.incomeCount + " Incomes added by monthly repeater.");
+				                    alert(data.incomeCount + " Incomes added by repeater.");
 				                }
 
 				                console.log("Repeator added successfully");

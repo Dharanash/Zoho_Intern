@@ -251,6 +251,13 @@
 			<result type="json"/>
 		</action>
 		
+		<action name="flush"
+			class="com.expensecalculator.controller.CategoryController"
+			method="removeCategoryFromDate">
+			<interceptor-ref name="authenticationInterceptor" />
+			<result type="json"/>
+		</action>
+		
 		
 	</package>
 	

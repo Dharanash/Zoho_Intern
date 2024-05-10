@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.expensecalculator.enums.AutoAdderCategory;
+
 public class InputValidationService {
 	private static final String DIGIT_REGEX = "^[0-9]{1,}$";
 	private static final Pattern digitPattern = Pattern.compile(DIGIT_REGEX);
@@ -30,13 +32,13 @@ public class InputValidationService {
 	
 	public static long getNextTimestamp(String startDateStr, String inputDateStr, int count, int autoAdderCategoryId) throws ParseException {
 		Date inputDate = dateFormat.parse(inputDateStr);
-		if(autoAdderCategoryId==1) {
+		if(autoAdderCategoryId==AutoAdderCategory.Day.getCategoryId()) {
 			Calendar calendar = Calendar.getInstance();
 	        calendar.setTime(inputDate);
 	        calendar.add(Calendar.DATE, count);
 	        return calendar.getTimeInMillis();
 		}
-		else if(autoAdderCategoryId==2) {
+		else if(autoAdderCategoryId==AutoAdderCategory.Week.getCategoryId()) {
 			Calendar calendar = Calendar.getInstance();
 	        calendar.setTime(inputDate);
 	        calendar.add(Calendar.WEEK_OF_MONTH, count);
@@ -49,7 +51,7 @@ public class InputValidationService {
         int startDay = calendar.get(Calendar.DAY_OF_MONTH); 
         
         calendar.setTime(inputDate);
-        calendar.add(Calendar.MONTH, 1);
+        calendar.add(Calendar.MONTH, count);
         int date = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)<startDay? calendar.getActualMaximum(Calendar.DAY_OF_MONTH):startDay;
         calendar.set(Calendar.DAY_OF_MONTH, date);
         

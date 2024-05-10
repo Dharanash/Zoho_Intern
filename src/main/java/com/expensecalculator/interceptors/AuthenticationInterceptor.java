@@ -100,9 +100,9 @@ public class AuthenticationInterceptor implements Interceptor{
       
 	
 	private boolean hasAccess(int userRoleId, String requestURI) {
-		if (userRoleId == 1) {
+		if (userRoleId == Role.Admin.getRoleId()) {
 			return requestURI.contains("/category") || 	requestURI.contains("/home") || requestURI.contains("/admin")	;
-		} else if (userRoleId == 2) {
+		} else if (userRoleId == Role.GeneralUser.getRoleId()) {
 			return requestURI.contains("/category") || requestURI.contains("/home") || requestURI.contains("/guser") || requestURI.contains("/transaction")	;
 		}
 		return false;

@@ -18,8 +18,8 @@ import org.apache.struts2.ServletActionContext;
 import com.expensecalculator.dao.TransactionDao;
 import com.expensecalculator.dao.UserDao;
 import com.expensecalculator.dto.Transaction;
-import com.expensecalculator.dto.User;
 import com.expensecalculator.enums.ResponseStatus;
+import com.expensecalculator.enums.TransactionType;
 import com.expensecalculator.service.InputValidationService;
 import com.expensecalculator.service.MappingService;
 import com.google.gson.JsonObject;
@@ -199,16 +199,9 @@ public class TransactionController extends ActionSupport {
 
 		HttpServletRequest request = ServletActionContext.getRequest();
 		HttpServletResponse response = ServletActionContext.getResponse();
-		int transactionId = 0;
-		try {
-			transactionId = Integer.parseInt(request.getParameter("transactionId"));
-		} catch (Exception e) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().write(ResponseStatus.Error.toString());
-			throw e;
-		}
 
 		try {
+			int transactionId = Integer.parseInt(request.getParameter("transactionId"));
 			if (!transactionDao.removeTransaction(transactionId)) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().write(ResponseStatus.Failure.toString());
@@ -251,16 +244,16 @@ public class TransactionController extends ActionSupport {
 							transaction.autoAdderCategoryId));
 					transactionDao.addTransaction(transaction);
 
-					if (transaction.typeId == 1) {
+					if (transaction.typeId == TransactionType.Expense.getTypeId()) {
 						expenseCount++;
-					} else if (transaction.typeId == 2) {
+					} else if (transaction.typeId == TransactionType.Income.getTypeId()) {
 						incomeCount++;
 					}
 				}
 
-				if (transaction.typeId == 1) {
+				if (transaction.typeId == TransactionType.Expense.getTypeId()) {
 					expenseCount++;
-				} else if (transaction.typeId == 2) {
+				} else if (transaction.typeId == TransactionType.Income.getTypeId()) {
 					incomeCount++;
 				}
 				transactionDao.updateRepeaterInTransaction(transaction.transactionId, transaction.nextAddDateTimestamp);

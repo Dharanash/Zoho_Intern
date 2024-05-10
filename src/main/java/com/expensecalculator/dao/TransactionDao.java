@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -199,25 +198,6 @@ public class TransactionDao extends CategoryDao{
 	    }
 	}
 
-	
-	public int addTransactionCategory(String category, int userId, int transactionTypeId) throws ClassNotFoundException, SQLException {
-	    String sql = "INSERT INTO transaction_category (category, adddate, userid, transaction_type_id) VALUES (?, ?, ?, ?)";
-	    int generatedId = -1;
-	    try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-	        statement.setString(1, category.trim().toLowerCase());
-	        statement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-	        statement.setInt(3, userId);
-	        statement.setInt(4, transactionTypeId);
-	        statement.executeUpdate();
-	        
-	        try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-	            if (generatedKeys.next()) {
-	                generatedId = generatedKeys.getInt(1);
-	            }
-	        }
-	    }
-	    return generatedId;
-	}
 	
 	public boolean updateTransaction(Transaction transaction) throws ClassNotFoundException, SQLException {
 		String sql = "update transaction set amount=?, note=?, datetime=?, categoryid=?, next_add_date=?, repeat_count=?, auto_adder_category_id=?, auto_adder_status_id=?  where transactionid=?";

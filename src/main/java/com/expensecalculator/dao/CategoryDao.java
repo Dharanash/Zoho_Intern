@@ -58,4 +58,14 @@ public class CategoryDao {
 	        return rowsAffected > 0;
 	    }
 	}
+	
+	public boolean removeCategoryByUserId(int userid) throws ClassNotFoundException, SQLException {
+	    String sql = "delete from transaction_category where userid=? and transaction_category_id not in ( select categoryid from transaction where userid=? )";
+	    try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+	        statement.setInt(1, userid);
+	        statement.setInt(2, userid);
+	        int rowsAffected = statement.executeUpdate();
+	        return rowsAffected > 0;
+	    }
+	}
 }

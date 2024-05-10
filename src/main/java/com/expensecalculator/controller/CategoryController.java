@@ -1,7 +1,9 @@
 package com.expensecalculator.controller;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,4 +90,27 @@ public class CategoryController extends ActionSupport {
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().write(ResponseStatus.Success.toString());
 	}
+	
+	public void removeCategoryFromDate() throws ClassNotFoundException, IOException, SQLException {
+		HttpServletRequest request = ServletActionContext.getRequest();
+		HttpServletResponse response = ServletActionContext.getResponse();
+		try {
+			int userId = Integer.parseInt(request.getParameter("userId"));
+			if(!categoryDao.removeCategoryByUserId(userId)) {
+				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+				response.getWriter().write(ResponseStatus.Success.toString());
+				return;
+			}
+			}
+			catch (SQLException e) {
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				response.getWriter().write(ResponseStatus.Error.toString());
+				throw e;
+			}
+		
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().write(ResponseStatus.Success.toString());
+	}
+	
+	
 }

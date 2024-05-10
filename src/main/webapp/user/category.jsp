@@ -38,6 +38,8 @@
 			</tbody>
 		</table>
 		</form>
+		<a id="flushButton" onclick="removeCategory()" class="btn btn-danger"
+			style="position: absolute; top: 125px; right: 80px;">Flush</a>
 		<br>
 		<table class="table table-stripped">
 			<thead>
@@ -55,6 +57,11 @@
 	<script type="text/javascript">
 	const userId = sessionStorage.getItem('userId');
 	const roleId = sessionStorage.getItem('userRoleId');
+	
+	if(roleId==1){
+		document.getElementById("flushButton").style.display="none";
+	}
+	
         document.getElementById("addForm").addEventListener("submit", function(event){
         event.preventDefault();
         
@@ -102,8 +109,30 @@
         
             return true;
         }
+        
+        function removeCategory()
+        {
+        	fetch("../category/flush?userId="+userId)
+            .then(response => {
+                if (response.status === 200) {
+                    alert('Unused Categories removed successfully');
+                    populateTable();
+                } 
+                else if(response.status === 204) {
+                	alert('No unused categories to remove.');
+                	return;
+                }
+    	        else {
+                    throw new Error('Failed to remove category');
+                }
+            })
+            .catch(error => {
+                console.error('Error removing category:', error);
+            });
+        }
+        
 
-        function updateExpense(categoryId) {
+        function updateCategory(categoryId) {
 
             const row = document.getElementById('row_' + categoryId);
             const category = row.querySelector('input[name="category"]').value;
@@ -148,7 +177,7 @@
                                 "<td><input name='category' class='form-control' value='" + category.category + "' required></td>" +
                                 "<td>" + category.transactionType + "</td>" +
                                 "<td>"+category.addDate+"</td>"+
-                                "<td> <button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + category.categoryId + ")'>Update</button> </td>";
+                                "<td> <button type='button' class='btn btn-sm btn-success' onclick='updateCategory(" + category.categoryId + ")'>Update</button> </td>";
                         } else {
                             rowTag.innerHTML =
                                 "<td>" + category.category + "</td>" +
