@@ -18,6 +18,7 @@ import org.apache.struts2.ServletActionContext;
 import com.expensecalculator.dao.TransactionDao;
 import com.expensecalculator.dao.UserDao;
 import com.expensecalculator.dto.Transaction;
+import com.expensecalculator.enums.AutoAdderStatus;
 import com.expensecalculator.enums.ResponseStatus;
 import com.expensecalculator.enums.TransactionType;
 import com.expensecalculator.service.InputValidationService;
@@ -132,7 +133,7 @@ public class TransactionController extends ActionSupport {
 				return;
 			}
 
-			if (autoAdderStatusId == 1) {
+			if (autoAdderStatusId == AutoAdderStatus.Checked.getStatusId()) {
 				int count = Integer.parseInt(request.getParameter("autoAdderCount"));
 				int autoAdderCategoryId = Integer.parseInt(request.getParameter("autoAdderCategoryId"));
 				Timestamp dataTimestamp = new Timestamp(
@@ -168,7 +169,7 @@ public class TransactionController extends ActionSupport {
 			int categoryId = Integer.parseInt(request.getParameter("categoryId"));
 			int autoAdderStatusId = Integer.parseInt(request.getParameter("autoAdderStatusId"));
 
-			if (autoAdderStatusId == 1) {
+			if (autoAdderStatusId == AutoAdderStatus.Checked.getStatusId()) {
 				int count = Integer.parseInt(request.getParameter("autoAdderCount"));
 				int autoAdderCategoryId = Integer.parseInt(request.getParameter("autoAdderCategoryId"));
 				String dateTimeStr = InputValidationService.getTimestamp(datetime).toString();
@@ -233,9 +234,10 @@ public class TransactionController extends ActionSupport {
 				transaction.nextAddDateTimestamp = new Timestamp(
 						InputValidationService.getNextTimestamp(startDate, transaction.nextAddDateTimestamp.toString(),
 								transaction.count, transaction.autoAdderCategoryId));
-				transaction.autoAdderStatus = 3;
+				transaction.autoAdderStatus = AutoAdderStatus.Repeated.getStatusId();
 				transactionDao.addTransaction(transaction);
-
+				transactionDao.updateRepeaterInTransaction(transaction.transactionId, transaction.nextAddDateTimestamp);
+				
 				Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
 				while (transaction.nextAddDateTimestamp.before(currentTimestamp)) {
 					transaction.datetime = transaction.nextAddDateTimestamp.toString();
@@ -243,7 +245,8 @@ public class TransactionController extends ActionSupport {
 							transaction.nextAddDateTimestamp.toString(), transaction.count,
 							transaction.autoAdderCategoryId));
 					transactionDao.addTransaction(transaction);
-
+					transactionDao.updateRepeaterInTransaction(transaction.transactionId, transaction.nextAddDateTimestamp);
+					
 					if (transaction.typeId == TransactionType.Expense.getTypeId()) {
 						expenseCount++;
 					} else if (transaction.typeId == TransactionType.Income.getTypeId()) {
@@ -256,7 +259,7 @@ public class TransactionController extends ActionSupport {
 				} else if (transaction.typeId == TransactionType.Income.getTypeId()) {
 					incomeCount++;
 				}
-				transactionDao.updateRepeaterInTransaction(transaction.transactionId, transaction.nextAddDateTimestamp);
+				
 			}
 		} catch (ClassNotFoundException | SQLException e) {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
