@@ -68,9 +68,10 @@ public class CategoryController extends ActionSupport {
 		HttpServletResponse response = ServletActionContext.getResponse();
 		try {
 		int userId = Integer.parseInt(request.getParameter("userId"));
+		int typeId = Integer.parseInt(request.getParameter("transactionTypeId"));
 		String category = request.getParameter("category");
 		int categoryId = Integer.parseInt(request.getParameter("categoryId"));
-		if(!categoryDao.updateCategory(category, categoryId, userId)) {
+		if(!categoryDao.updateCategory(category, categoryId, userId, typeId)) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().write(ResponseStatus.Failure.toString());
 			return;

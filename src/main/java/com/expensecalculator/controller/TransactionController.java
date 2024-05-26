@@ -203,7 +203,8 @@ public class TransactionController extends ActionSupport {
 
 		try {
 			int transactionId = Integer.parseInt(request.getParameter("transactionId"));
-			if (!transactionDao.removeTransaction(transactionId)) {
+			int userId = Integer.parseInt(request.getParameter("userId"));
+			if (!transactionDao.removeTransaction(transactionId, userId)) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().write(ResponseStatus.Failure.toString());
 				return;

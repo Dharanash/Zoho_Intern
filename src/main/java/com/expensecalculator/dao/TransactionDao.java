@@ -11,10 +11,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.expensecalculator.dto.Transaction;
+import com.expensecalculator.redis.RedisConnection;
+import com.expensecalculator.redis.RedisUtils;
 import com.expensecalculator.service.InputValidationService;
 import com.expensecalculator.service.MappingService;
 
+import redis.clients.jedis.Jedis;
+
 public class TransactionDao extends CategoryDao{
+	private final static String monthly_transactions="monthly_transactions:";
+	private final static String transaction_category="transaction_category:";
+	
 	public ArrayList<Transaction> getTransaction(int userId, int transactionTypeId) throws ClassNotFoundException, SQLException {
 		String sql = "SELECT t.* , tc.*, a.status as autoAdderStatus FROM transaction t join transaction_category tc on t.categoryid=tc.transaction_category_id "
 				+ " join auto_adder_status a on a.auto_adder_status_id=t.auto_adder_status_id WHERE t.userid=? and t.transaction_type_id=? order by t.datetime";
@@ -64,15 +71,32 @@ public class TransactionDao extends CategoryDao{
 	}
 	
 	public String getFilteredTransactionByMonth(int userId) throws ClassNotFoundException, SQLException {
-		String sql = "SELECT t.transaction_type_id , tc.category, sum(t.amount) as total_amount FROM transaction t join transaction_category tc "
-				+ "on t.categoryid=tc.transaction_category_id WHERE t.userid=? and month(t.datetime)=month(current_date()) and year(t.datetime)=year(current_date()) group by t.categoryid";
-		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
-			st.setInt(1, userId);
-			ResultSet rs = st.executeQuery();
-			return MappingService.mapToGroupCategoryJson(rs);
-		}
+        String redisKey = monthly_transactions + userId;
+        
+        try (Jedis jedis = RedisConnection.getPool().getResource()) {
+            if (jedis.exists(redisKey)) {
+                return jedis.get(redisKey);
+            }
+        }
 
-	}
+        String sql = "SELECT t.transaction_type_id , tc.category, sum(t.amount) as total_amount FROM transaction t " +
+                "join transaction_category tc on t.categoryid=tc.transaction_category_id " +
+                "WHERE t.userid=? and month(t.datetime)=month(current_date()) and year(t.datetime)=year(current_date()) " +
+                "group by t.categoryid";
+        
+        try (Connection connection = DatabaseConnectionDAO.getConnection();
+             PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, userId);
+            ResultSet rs = st.executeQuery();
+            String jsonResult = MappingService.mapToGroupCategoryJson(rs);
+
+            try (Jedis jedis = RedisConnection.getPool().getResource()) {
+                jedis.set(redisKey, jsonResult);
+            }
+
+            return jsonResult;
+        }
+    }
 	
 	public ArrayList<Transaction> getAutoAdderFromUserId(int userId) throws ClassNotFoundException, SQLException {
 		String sql = "SELECT * FROM transaction WHERE userid=? and auto_adder_status_id=1 and next_add_date <= CURRENT_TIMESTAMP";
@@ -123,16 +147,30 @@ public class TransactionDao extends CategoryDao{
 
 	}
 	
-	public HashMap<Integer, String> getTransactionCategory(int userId, int typeId) throws ClassNotFoundException, SQLException {
-		String sql = "SELECT *  FROM transaction_category where userid in (1,?) and transaction_type_id=? ";
-		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setInt(1, userId);
-			statement.setInt(2, typeId);
-			ResultSet rs = statement.executeQuery();
-			return MappingService.mapToTransactionCategory(rs);
-		}
+	public HashMap<String, String> getTransactionCategory(int userId, int typeId) throws ClassNotFoundException, SQLException {
+        String cacheKey=transaction_category+userId+":"+typeId;
+        try (Jedis jedis = RedisConnection.getPool().getResource()) {
+            if (jedis.exists(cacheKey)) {
+                System.out.println("Fetching data from Redis");
+                return (HashMap<String, String>) jedis.hgetAll(cacheKey);
+            }
+        }
 
-	}
+        String sql = "SELECT * FROM transaction_category WHERE userid IN (1, ?) AND transaction_type_id = ?";
+        try (Connection connection = DatabaseConnectionDAO.getConnection(); 
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setInt(1, userId);
+            statement.setInt(2, typeId);
+            ResultSet rs = statement.executeQuery();
+            
+            HashMap<String, String> transactionCategoryMap = MappingService.mapToTransactionCategory(rs);
+            
+            RedisUtils.addToCacheHset(cacheKey, transactionCategoryMap);
+
+            return transactionCategoryMap;
+        }
+    }
 	
 	public HashMap<Integer, String> getAutoAdderCategory() throws ClassNotFoundException, SQLException {
 		String sql = "SELECT *  FROM auto_adder_category";
@@ -143,27 +181,25 @@ public class TransactionDao extends CategoryDao{
 
 	}
 	
-	public int addTransaction(Transaction transaction) throws ClassNotFoundException, SQLException {
-		String sql = "INSERT INTO transaction (amount, note, userid, datetime, categoryid, transaction_type_id, auto_adder_status_id) VALUES (?, ?, ?,?, ?, ?,?)";
-		int generatedId = -1;
-		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			statement.setDouble(1, transaction.amount);
-			statement.setString(2, transaction.note);
-			statement.setInt(3, transaction.userId);
-			statement.setTimestamp(4, Timestamp.valueOf(transaction.datetime));
-			statement.setInt(5, transaction.categoryId);
-			statement.setInt(6, transaction.typeId);
-			statement.setInt(7, transaction.autoAdderStatus);
-			statement.executeUpdate();
-			
-			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-	            if (generatedKeys.next()) {
-	                generatedId = generatedKeys.getInt(1);
-	            }
-	        }
-		}
-		return generatedId;
-	}
+	public void addTransaction(Transaction transaction) throws ClassNotFoundException, SQLException {
+        String sql = "INSERT INTO transaction (amount, note, userid, datetime, categoryid, transaction_type_id, auto_adder_status_id) VALUES (?, ?, ?,?, ?, ?,?)";
+        
+        try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDouble(1, transaction.amount);
+            statement.setString(2, transaction.note);
+            statement.setInt(3, transaction.userId);
+            statement.setTimestamp(4, Timestamp.valueOf(transaction.datetime));
+            statement.setInt(5, transaction.categoryId);
+            statement.setInt(6, transaction.typeId);
+            statement.setInt(7, transaction.autoAdderStatus);
+            statement.executeUpdate();
+            
+        }
+
+        if (RedisUtils.isCurrentMonthTransaction(transaction.datetime)) {
+        	RedisUtils.deleteCache(monthly_transactions+transaction.userId);
+        }
+    }
 	
 	public void addTransactionWithAutoAdder(Transaction transaction) throws ClassNotFoundException, SQLException {
 		String sql = "INSERT INTO transaction (amount, note, userid, datetime, categoryid, transaction_type_id, auto_adder_status_id, next_add_date, repeat_count, auto_adder_category_id) "
@@ -181,7 +217,9 @@ public class TransactionDao extends CategoryDao{
 			statement.setInt(10, transaction.autoAdderCategoryId);
 			statement.executeUpdate();
 			
-		
+			if (RedisUtils.isCurrentMonthTransaction(transaction.datetime)) {
+	        	RedisUtils.deleteCache(monthly_transactions+transaction.userId);
+	        }
 		}
 	}
 	
@@ -212,6 +250,11 @@ public class TransactionDao extends CategoryDao{
 			statement.setInt(8, transaction.autoAdderStatus);
 			statement.setInt(9, transaction.transactionId);
 			int rowsAffected = statement.executeUpdate();
+			
+			if (RedisUtils.isCurrentMonthTransaction(InputValidationService.getTimestamp(transaction.datetime).toString())) {
+				RedisUtils.deleteCache(monthly_transactions+transaction.userId);
+	        }
+			
 	        return rowsAffected > 0;
 		}
 
@@ -227,11 +270,12 @@ public class TransactionDao extends CategoryDao{
 
 	}
 	
-	public boolean removeTransaction(int transactionId) throws ClassNotFoundException, SQLException {
+	public boolean removeTransaction(int transactionId, int userId) throws ClassNotFoundException, SQLException {
 		String sql = "delete from transaction  where transactionid=?";
 		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, transactionId);
 			int rowsAffected = statement.executeUpdate();
+			RedisUtils.deleteCache(monthly_transactions+userId);
 	        return rowsAffected > 0;
 		}
 	}

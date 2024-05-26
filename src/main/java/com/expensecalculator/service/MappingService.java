@@ -183,10 +183,10 @@ public class MappingService {
 		return categories;
 	}
 
-	public static HashMap<Integer, String> mapToTransactionCategory(ResultSet result) throws SQLException {
-		HashMap<Integer, String> map = new HashMap<>();
+	public static HashMap<String, String> mapToTransactionCategory(ResultSet result) throws SQLException {
+		HashMap<String, String> map = new HashMap<>();
 		while (result.next()) {
-			int categoryId = result.getInt("transaction_category_id");
+			String categoryId = result.getString("transaction_category_id");
 			String category = result.getString("category");
 			map.put(categoryId, category);
 		}

@@ -7,8 +7,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import com.expensecalculator.dto.User;
+import com.expensecalculator.redis.RedisConnection;
 import com.expensecalculator.service.EncryptionService;
+import com.expensecalculator.service.InputValidationService;
 import com.expensecalculator.service.MappingService;
+
+import redis.clients.jedis.Jedis;
 
 public class UserDao {
 	public User checkUser(String userEmail, String password) throws ClassNotFoundException, SQLException {
@@ -26,12 +30,26 @@ public class UserDao {
 
 	}
 	
-	public ArrayList<User> getUsers() throws ClassNotFoundException, SQLException {
-		String sql = "SELECT * FROM users WHERE roleid=2";
-		try (Connection connection = DatabaseConnectionDAO.getConnection(); PreparedStatement st = connection.prepareStatement(sql)) {
-			ResultSet rs = st.executeQuery();
-			return MappingService.mapToUsers(rs);
+	public String getUsers() throws ClassNotFoundException, SQLException {
+		
+		try(Jedis jedis= RedisConnection.getPool().getResource()){
+			String users = jedis.get("users");
+			if(users!=null) {
+				return users;
+			}
+			else {
+				String sql = "SELECT * FROM users WHERE roleid=2";
+				try (Connection connection = DatabaseConnectionDAO.getConnection();
+						PreparedStatement st = connection.prepareStatement(sql)) {
+
+					ResultSet rs = st.executeQuery();
+					String jsonString= MappingService.mapToJson(MappingService.mapToUsers(rs));
+					jedis.set("users", jsonString);
+					return jsonString;
+				}
+			}
 		}
+		
 
 	}
 	

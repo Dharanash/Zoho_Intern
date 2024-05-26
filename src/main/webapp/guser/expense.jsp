@@ -5,6 +5,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <link rel="stylesheet" type="text/css" href="../css/userpage-style.css">
 <%@include file="../includes/head.jsp"%>
 <meta charset="UTF-8">
@@ -131,348 +133,321 @@
 	</div>
 
 	<script>
-	var transactionTypeId = 1;
-	var checked=1;
-	var unchecked=2;
-	var repeated=3;
-	var userId = sessionStorage.getItem('userId');
-	window.addEventListener('load', populateCategories);
-	window.addEventListener('load', populateAutoAdderCategories('autoAdderCategorySelect'));
-	window.addEventListener('load', populateAutoAdderCategories('autoAdderCategoryUpdate'));
-	
-	function populateAutoAdderCategories(selectTagId){
-		let url = "../transaction/getautoaddercategory?userId="+userId;
-		fetch(url, {method:'POST'})
-        .then(response => response.json())
-        .then(categories => {
-            const selectTag = document.getElementById(selectTagId);
-            selectTag.innerHTML = '';
-
-            Object.entries(categories).forEach(([key, value]) => {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = value;
-                selectTag.appendChild(option);
+        var transactionTypeId = 1;
+        var checked = 1;
+        var unchecked = 2;
+        var repeated = 3;
+        var userId = sessionStorage.getItem('userId');
+    
+        $(document).ready(function () {
+            populateCategories();
+            populateAutoAdderCategories('#autoAdderCategorySelect');
+            populateAutoAdderCategories('#autoAdderCategoryUpdate');
+        });
+    
+        function populateAutoAdderCategories(selectTagId) {
+            let url = "../transaction/getautoaddercategory?userId=" + userId;
+            $.post(url, function (categories) {
+                const selectTag = $(selectTagId);
+                selectTag.empty();
+    
+                $.each(categories, function (key, value) {
+                    $("<option>", {
+                        value: key,
+                        text: value
+                    }).appendTo(selectTag);
+                });
+            }).fail(function (error) {
+                console.error('Error fetching auto adder categories:', error);
             });
+        }
+    
+        function autoAdderClick(checkbox) {
+            $("#autoAdderCategorySelect, #autoAdderCountInput").toggle();
+        }
+    
+        function autoAdderClickUpdate(checkbox) {
+            const selectTag = $('#autoAdderCategoryUpdate');
+            const count = $('#autoAdderCountUpdate');
+            const status = $('#autoAdderStatusId');
+    
+            const isChecked = checkbox.checked;
+            status.val(isChecked ? 1 : 2);
+            selectTag.toggle(isChecked);
+            count.toggle(isChecked);
+        }
+    
+        function populateCategories() {
+            let url = "../transaction/getcategory?userId=" + userId + "&transactionTypeId=" + transactionTypeId;
+    
+            $.post(url, function (categories) {
+                const selectTag = $('#addCategorySelect');
+                selectTag.empty();
+    
+                $("<option>", {
+                    value: -1,
+                    text: "-- Select --"
+                }).appendTo(selectTag);
+    
+                $.each(categories, function (key, value) {
+                    $("<option>", {
+                        value: key,
+                        text: value
+                    }).appendTo(selectTag);
+                });
+    
+                selectTag.change(function () {
+                    var now = new Date();
+                    var istOffset = 5.5 * 60 * 60 * 1000;
+                    var istTime = new Date(now.getTime() + istOffset);
+                    var formattedDateTime = istTime.toISOString().slice(0, 16);
+                    $('#datetimeInputAdd').val(formattedDateTime);
+                });
+            }).fail(function (xhr, status, error) {
+                console.error('Error fetching categories:', error);
+            });
+        }
+    
+        function validateForm(form) {
+            const amount = $(form).find('input[name="amount"]').val();
+            const note = $(form).find('input[name="note"]').val();
+            const datetime = $(form).find('input[name="datetime"]').val();
+            const category = $(form).find('select[name="categoryId"]').val();
+            const checkbox = $(form).find('input[name="autoAdder"]');
+    
+            if (category == 0 && !$(form).find('input[name="category"]').val()) {
+                alert('Custom category annot be empty.');
+            }
+    
+            if (!amount || isNaN(amount) || amount <= 0) {
+                alert('Amount must be a positive integer.');
+                return false;
+            }
+    
+            if (!note.trim()) {
+                alert('Note cannot be empty.');
+                return false;
+            }
+    
+            if (!category || category == -1) {
+                alert('Please select a category.');
+                return false;
+            }
+    
+            if (!datetime) {
+                alert('Date and Time cannot be empty.');
+                return false;
+            }
+    
+            if (checkbox.prop("checked")) {
+                const autoAdderCategory = $(form).find('select[name="autoAdderCategoryId"]').val();
+                const count = $(form).find('input[name="autoAdderCount"]').val();
+    
+                if (!count || isNaN(count) || count <= 0) {
+                    alert('Repeat day count must be a positive integer.');
+                    return false;
+                }
+    
+                if (!autoAdderCategory) {
+                    alert('Please select anyone of repeater category.');
+                    return false;
+                }
+            }
+    
+            return true;
+        }
+    
+        $('#addExpenseForm').submit(function (event) {
+            event.preventDefault();
+    
+            if (!validateForm(this)) {
+                return;
+            }
+    
+            const checkbox = $(this).find('input[name="autoAdder"]');
+    
+            $.ajax({
+                url: "../transaction/add?userId=" + userId + "&transactionTypeId=" + transactionTypeId,
+                method: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (checkbox.prop("checked")) {
+                        $(this).find('input[name="autoAdderCount"]').hide();
+                        $(this).find('select[name="autoAdderCategoryId"]').hide();
+                    }
+    
+                    if (response.ok) {
+                        alert('Expense added successfully');
+                        this.reset();
+                        populateExpenseTable();
+                    } else if (response.status === 400) {
+                        throw new Error('Wrong Parameter type.');
+                    } else if (response.status === 409) {
+                        alert('Given Category is already exist, Try with another name.');
+                        return;
+                    } else if (response.status === 500) {
+                        throw new Error('Error occurred while adding expense');
+                    } else {
+                        throw new Error('Failed to add expense');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error adding expense:', error);
+                    alert(error);
+                }
+            });
+        });
+    
+        $('#closePopupBtn').click(function () {
+            $('#popupForm').hide();
+        });
+    
+        async function updateExpense(transactionId) {
+            try {
+    
+                const transactionResponse = await fetch("../transaction/gettransaction?userId=" + userId + "&transactionId=" + transactionId);
+                const transactionData = await transactionResponse.json();
+    
+                $('#expenseIdInput').val(transactionData.transactionId);
+                $('#amountInput').val(transactionData.amount);
+                $('#noteInput').val(transactionData.note);
+                $('#datetimeInput').val(transactionData.datetime.slice(0, 16).replace('T', ' '));
+                $('#autoAdderStatusId').val(transactionData.autoAdderStatus);
+    
+                const updateCheckBox = $('#autoAdderCheckboxUpdate');
+                const updateSelectTag = $('#autoAdderCategoryUpdate');
+                const count = $('#autoAdderCountUpdate');
+    
+                if (transactionData.autoAdderStatus === 1) {
+                    const autoAdderCount = transactionData.count;
+                    const autoAdderCategoryId = transactionData.autoAdderCategoryId;
+    
+                    updateSelectTag.find("option").eq(autoAdderCategoryId - 1).prop("selected", true);
+                    count.val(autoAdderCount);
+                    updateCheckBox.show();
+                    updateCheckBox.prop("checked", true);
+                    updateSelectTag.show();
+                    count.show();
+    
+                } else if (transactionData.autoAdderStatus === 2) {
+                    updateCheckBox.show();
+                    updateCheckBox.prop("checked", false);
+                    updateSelectTag.hide();
+                    count.hide();
+                } else {
+                    updateCheckBox.hide();
+                    updateSelectTag.hide();
+                    count.hide();
+                }
 
-        })
-        .catch(error => console.error('Error fetching auto adder categories:', error));
-}
-	
-	function autoAdderClick(checkbox)
-	{
-		const selectTag = document.getElementById('autoAdderCategorySelect');
-		const count = document.getElementById('autoAdderCountInput');
-		
-		 if (checkbox.checked) {
-		selectTag.style.display = 'block';
-		count.style.display = 'block';
-		 }
-		 else{
-			 selectTag.style.display = 'none';
-			count.style.display = 'none';
-		 }
-		 
-	}
-	
-	function autoAdderClickUpdate(checkbox)
-	{
-		const selectTag = document.getElementById('autoAdderCategoryUpdate');
-		const count = document.getElementById('autoAdderCountUpdate');
-		const status = document.getElementById('autoAdderStatusId');
-		
-		 if (checkbox.checked) {
-			 status.value=1;
-		selectTag.style.display = 'block';
-		count.style.display = 'block';
-		 }
-		 else{
-			 status.value=2;
-			 selectTag.style.display = 'none';
-			count.style.display = 'none';
-		 }		 
-	}
-	
-	function populateCategories() {
-		let url = "../transaction/getcategory?userId="+userId+"&transactionTypeId="+transactionTypeId;
-	    fetch(url, {method:'POST'})
-	        .then(response => response.json())
-	        .then(categories => {
-	            const selectTag = document.getElementById('addCategorySelect');
-	            selectTag.innerHTML = '';
-	            
-	            const doption = document.createElement('option');
-	            doption.value=-1; 
-	            doption.textContent = "-- Select --";
-	            selectTag.appendChild(doption);
-
-	            Object.entries(categories).forEach(([key, value]) => {
-	                const option = document.createElement('option');
-	                option.value = key;
-	                option.textContent = value;
-	                selectTag.appendChild(option);
-	            });
-	            
-	            selectTag.addEventListener('change', function() {
-	             var now = new Date();
-	             var istOffset = 5.5 * 60 * 60 * 1000;
-	             var istTime = new Date(now.getTime() + istOffset);
-	             var formattedDateTime = istTime.toISOString().slice(0, 16);
-	                document.getElementById('datetimeInputAdd').value =formattedDateTime; 
-	            });
-	        })
-	        .catch(error => console.error('Error fetching categories:', error));
-	}
-
-	function validateForm(form) {
-	    const amount = form.querySelector('input[name="amount"]').value;
-	    const note = form.querySelector('input[name="note"]').value;
-	    const datetime = form.querySelector('input[name="datetime"]').value;
-	    const category=form.querySelector('select[name="categoryId"]').value;
-	    const checkbox=form.querySelector('input[name="autoAdder"]');
-	    
-	    if(category==0 && !form.querySelector('input[name="category"]').value){
-	    	alert('Custom category annot be empty.');
-	    }
-	    
-	    if (!amount || isNaN(amount) || amount <= 0) {
-	        alert('Amount must be a positive integer.');
-	        return false;
-	    }
-
-	    if (!note.trim()) {
-	        alert('Note cannot be empty.');
-	        return false;
-	    }
-	    
-	    if (!category|| category==-1) {
-	        alert('Please select a category.');
-	        return false;
-	    }
-	    
-	    if(!datetime){
-	    	alert('Date and Time cannot be empty.');
-	    	return false;
-	    }
-	    
-	    if(checkbox.checked){
-	    	const autoAdderCategory=form.querySelector('select[name="autoAdderCategoryId"]').value;
-	    	const count = form.querySelector('input[name="autoAdderCount"]').value;
-	    	
-	    	 if (!count || isNaN(count) || count <= 0) {
-	 	        alert('Repeat day count must be a positive integer.');
-	 	        return false;
-	 	    }
-	    	 
-	    	 if (!autoAdderCategory) {
-	 	        alert('Please select anyone of repeater category.');
-	 	        return false;
-	 	    }
-	    }
-	    
-	    return true;
-	}
-
-	document.getElementById('addExpenseForm').addEventListener('submit', function(event) {
-	    event.preventDefault(); 
-	    
-	    if (!validateForm(this)) {
-	        return;
-	    }
-	    
-		const checkbox = this.querySelector('input[name="autoAdder"]');
-	    
-	    fetch("../transaction/add?userId="+userId+"&transactionTypeId="+transactionTypeId, {
-	        method: 'POST',
-	        body: new FormData(this)
-	    })
-	    .then(response => {
-	    	
-	    	 if (checkbox.checked) {
-	    		 this.querySelector('input[name="autoAdderCount"]').style.display = 'none';
-	    		 this.querySelector('select[name="autoAdderCategoryId"]').style.display = 'none';
-	    	 }
-	    	
-	        if (response.ok) {
-	            alert('Expense added successfully');
-	            this.reset();
-	            populateExpenseTable();
-	        } 
-	        else if(response.status === 400){
-	            throw new Error('Wrong Parameter type.');
-	        }
-	        else if(response.status === 409){
-	            alert('Given Category is already exist, Try with another name.');
-	            return;
-	        }
-	        else if(response.status === 500){
-	            throw new Error('Error occurred while adding expense');
-	        }
-	        else{
-	        	throw new Error('Failed to add expense');
-	        }
-	    })
-	    .catch(error => {
-	        console.error('Error adding expense:', error);
-	        alert(error);
-	    });
-	});
-	
-	document.getElementById('closePopupBtn').addEventListener('click', function() {
-		  document.getElementById('popupForm').style.display = 'none';
-		});
-
-	async function updateExpense(transactionId) {
-	    try {
-	        
-	        const transactionResponse = await fetch("../transaction/gettransaction?userId="+userId+"&transactionId="+transactionId);
-	        const transactionData = await transactionResponse.json();
-
-	        document.getElementById('expenseIdInput').value = transactionData.transactionId;
-	        document.getElementById('amountInput').value = transactionData.amount;
-	        document.getElementById('noteInput').value = transactionData.note;
-	        document.getElementById('datetimeInput').value = transactionData.datetime.slice(0, 16).replace('T', ' ');
-	        document.getElementById('autoAdderStatusId').value = transactionData.autoAdderStatus;
-			
-	        const updateCheckBox = document.getElementById('autoAdderCheckboxUpdate');
-	        const updateSelectTag = document.getElementById('autoAdderCategoryUpdate');
-	        const count = document.getElementById('autoAdderCountUpdate');
-
-	        if (transactionData.autoAdderStatus === 1) {
-	            const autoAdderCount = transactionData.count;
-	            const autoAdderCategoryId = transactionData.autoAdderCategoryId;
-	            
-	            updateSelectTag.options[autoAdderCategoryId - 1].selected = true;
-	            count.value = autoAdderCount;
-	            updateCheckBox.style.display = 'block';
-	            updateCheckBox.checked = true;
-	            updateSelectTag.style.display = 'block';
-	            count.style.display = 'block';
-	            
-	        } else if(transactionData.autoAdderStatus === 2) {
-	        	updateCheckBox.style.display = 'block';
-	        	updateCheckBox.checked = false;
-	            updateSelectTag.style.display = 'none';
-	            count.style.display = 'none';
-	        }
-	        else
-	        {
-	        	updateCheckBox.style.display = 'none';
-	            updateSelectTag.style.display = 'none';
-	            count.style.display = 'none';
-	        }
-	        
-	        let url = "../transaction/getcategory?userId="+userId+"&transactionTypeId="+transactionTypeId;
-	        const categoryResponse = await fetch(url);
-	        const categories = await categoryResponse.json();
-
-	        const selectTag = document.getElementById('updateCategorySelect');
-	        selectTag.innerHTML = '';
-
-	        Object.entries(categories).forEach(([key, value]) => {
-	            const option = document.createElement('option');
-	            option.value = key;
-	            option.textContent = value;
-	            selectTag.appendChild(option);
-	        });
-
-	        document.getElementById('popupForm').style.display = 'block';
-	    } catch (error) {
-	        console.error('Error updating expense:', error);
-	    }
-	}
-
-	function submitUpdateExpenseForm() {
-		const form=document.getElementById('updateExpenseForm');
-
-	    if (!validateForm(form)) {
-	        return;
-	    }
-		
-		const formData = new FormData(form);
-
-	    fetch("../transaction/update?userId="+userId+"&transactionTypeId="+transactionTypeId, {
-	        method: 'POST',
-	        body: formData
-	    })
-	    .then(response => {
-	        if (response.ok) {
-	            alert('Expense updated successfully');
-	            form.reset();
-	            populateExpenseTable();
-	        } else {
-	            throw new Error('Failed to update expense');
-	        }
-	    })
-	    .catch(error => {
-	        console.error('Error updating expense:', error);
-	        alert('Failed to update expense. Please try again.');
-	    });
-
-	    document.getElementById('popupForm').style.display = 'none';
-	}
-
-	function removeExpense(transactionId) {
-
-	    fetch("../transaction/remove?transactionId="+transactionId)
-	    .then(response => {
-	        if (response.ok) {
-	            alert('Expense deleted successfully');
-	            populateExpenseTable();
-	        } else if(response.status === 400){
-	            throw new Error('Wrong Parameter type.');
-	        }
-	        else if(response.status === 500){
-	            throw new Error('Error occurred while removing expense');
-	        }
-	        else{
-	        	throw new Error('Failed to remove expense');
-	        }
-	        
-	    })
-	    .catch(error => {
-	        console.error('Error removing expense:', error);
-	        alert('Failed to remove expense. Please try again.');
-	    });
-	}
-
-	function populateExpenseTable() {
-	    let url = "../transaction/get?userId="+userId+"&transactionTypeId="+transactionTypeId;
-	    fetch(url, {method:'POST'})
-	        .then(response => {
-			console.log(response);
-			return response.json();
-		})
-	        .then(data => {
-	            const expenseTableBody = document.getElementById('expenseTableBody');
-	            expenseTableBody.innerHTML = ''; 
-	            let totalExpense = 0;
-	            
-	            data.forEach(expense => {
-	            	totalExpense += parseFloat(expense.amount);
-	                const row = document.createElement('tr');
-	                row.id = 'expenseRow_' + expense.transactionId;
-	                row.innerHTML =
-	                    "<td>"+expense.autoAdderStatusString+"</td>" +
-	                    "<td><input name='amount' value='" + expense.amount + "' readonly></td>" +
-	                    "<td><input name='note' value='" + expense.note + "' readonly></td>" +
-	                    "<td><input name='category' value='" + expense.category + "' readonly></td>" +
-	                    "<td><input name='datetime' value='" + expense.datetime + "' readonly></td>"+
-	                    "<td>" +
-	                    "<button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + expense.transactionId + ")'>Update</button>" +
-	                    "</td>" +
-	                    "<td><button class='btn btn-sm btn-danger' onclick='removeExpense(" + expense.transactionId + ")'>Remove</button></td>";
-	                    
-	                    expenseTableBody.appendChild(row);
-	            });
-	            document.getElementById('totalExpense').innerText = "Total Expense: " + totalExpense.toFixed(2);
-	        })
-	        .catch(error => console.error('Error fetching expense data:', error));
-	}
-
-	window.addEventListener('load', populateExpenseTable);
-
+                let url = "../transaction/getcategory?userId=" + userId + "&transactionTypeId=" + transactionTypeId;
+                const categoryResponse = await fetch(url);
+                const categories = await categoryResponse.json();
+    
+                const selectTag = $('#updateCategorySelect');
+                selectTag.empty();
+    
+                $.each(categories, function (key, value) {
+                    $("<option>", {
+                        value: key,
+                        text: value
+                    }).appendTo(selectTag);
+                });
+    
+                $('#popupForm').show();
+            } catch (error) {
+                console.error('Error updating expense:', error);
+            }
+        }
+    
+        function submitUpdateExpenseForm() {
+            const form = $('#updateExpenseForm');
+    
+            if (!validateForm(form[0])) {
+                return;
+            }
+    
+            $.ajax({
+                url: "../transaction/update?userId=" + userId + "&transactionTypeId=" + transactionTypeId,
+                method: 'POST',
+                data: form.serialize(),
+                success: function () {
+                        alert('Expense updated successfully');
+                        form[0].reset();
+                        populateExpenseTable();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating expense:', error);
+                    alert('Failed to update expense. Please try again.');
+                },
+                complete: function () {
+                    $('#popupForm').hide();
+                }
+            });
+        }
+    
+        function removeExpense(transactionId) {
+            $.ajax({
+                url: "../transaction/remove?transactionId=" + transactionId,
+                success: function (response) {
+                    alert('Expense deleted successfully');
+                    populateExpenseTable();
+                },
+                error: function (xhr, status, error) {
+                    if (xhr.status === 400) {
+                        alert('Wrong Parameter type.');
+                    } else if (xhr.status === 500) {
+                        alert('Error occurred while removing expense');
+                    } else {
+                        alert('Failed to remove expense');
+                    }
+                    console.error('Error removing expense:', error);
+                }
+            });
+        }
+    
+        function populateExpenseTable() {
+            let url = "../transaction/get?userId=" + userId + "&transactionTypeId=" + transactionTypeId;
+    
+            $.post(url, function (data) {
+                const expenseTableBody = $('#expenseTableBody');
+                expenseTableBody.empty();
+                let totalExpense = 0;
+    
+                $.each(data, function (index, expense) {
+                    totalExpense += parseFloat(expense.amount);
+    
+                    const row = $("<tr>", {
+                        id: "expenseRow_" + expense.id
+                    }).html(
+                        "<td>" + expense.autoAdderStatusString + "</td>" +
+                        "<td><input name='amount' value='" + expense.amount + "' readonly></td>" +
+                        "<td><input name='note' value='" + expense.note + "' readonly></td>" +
+                        "<td><input name='category' value='" + expense.category + "' readonly></td>" +
+                        "<td><input name='datetime' value='" + expense.datetime + "' readonly></td>" +
+                        "<td>" +
+                        "<button type='button' class='btn btn-sm btn-success' onclick='updateExpense(" + expense.transactionId + ")'>Update</button>" +
+                        "</td>" +
+                        "<td><button class='btn btn-sm btn-danger' onclick='removeExpense(" + expense.transactionId + ")'>Remove</button></td>"
+                    );
+    
+                    expenseTableBody.append(row);
+                });
+    
+                $('#totalExpense').text("Total Expense: " + totalExpense.toFixed(2));
+            }).fail(function (error) {
+                console.error('Error fetching expense data:', error);
+            });
+        }
+    
+        $(document).ready(function () {
+            populateExpenseTable();
+        });
+        
 </script>
+        
 
 </body>
 </html>

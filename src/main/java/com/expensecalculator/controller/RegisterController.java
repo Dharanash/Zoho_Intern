@@ -6,10 +6,13 @@ import org.apache.struts2.ServletActionContext;
 
 import com.expensecalculator.dao.UserDao;
 import com.expensecalculator.dto.*;
+import com.expensecalculator.redis.RedisConnection;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.validator.annotations.EmailValidator;
 import com.opensymphony.xwork2.validator.annotations.RegexFieldValidator;
 import com.opensymphony.xwork2.validator.annotations.RequiredStringValidator;
+
+import redis.clients.jedis.Jedis;
 
 
 public class RegisterController extends ActionSupport {
@@ -67,6 +70,10 @@ public class RegisterController extends ActionSupport {
 				}
 				User user = new User(name, password, email, phonenumber);
 				userDao.addUser(user);
+				
+				try(Jedis jedis= RedisConnection.getPool().getResource()){
+					jedis.del("users");
+				}
 				System.out.println("registered");
 				return SUCCESS;
 	    }

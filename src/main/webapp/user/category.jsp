@@ -136,8 +136,9 @@
 
             const row = document.getElementById('row_' + categoryId);
             const category = row.querySelector('input[name="category"]').value;
+            const typeId = row.querySelector('input[name="transactionTypeId"]').value;
     
-            fetch("../category/update?userId="+userId+"&categoryId="+categoryId+"&category="+category)
+            fetch("../category/update?userId="+userId+"&categoryId="+categoryId+"&category="+category+"&transactionTypeId="+typeId)
             .then(response => {
                 if (response.ok) {
                     alert('Category updated successfully');
@@ -175,6 +176,7 @@
                         if (roleId == category.roleId) {
                             rowTag.innerHTML =
                                 "<td><input name='category' class='form-control' value='" + category.category + "' required></td>" +
+                                "<td><input name='transactionTypeId' class='form-control' value='" + category.transactionTypeId + "' required></td>"+
                                 "<td>" + category.transactionType + "</td>" +
                                 "<td>"+category.addDate+"</td>"+
                                 "<td> <button type='button' class='btn btn-sm btn-success' onclick='updateCategory(" + category.categoryId + ")'>Update</button> </td>";

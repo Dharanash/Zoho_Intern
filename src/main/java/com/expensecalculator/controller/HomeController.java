@@ -67,7 +67,7 @@ public class HomeController extends ActionSupport {
 	
 	public void getUsers() throws IOException, ClassNotFoundException, SQLException {
 		
-		String json = MappingService.mapToJson(userDao.getUsers());
+		String json = userDao.getUsers();
 		HttpServletResponse response = ServletActionContext.getResponse();
 		response.getWriter().write(json);
 	}
